@@ -1,0 +1,53 @@
+﻿@{
+    ViewData["Title"] = "Inicio";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Panel administrativo</h1>
+    <p class="page-subtitle">
+        Gestión general de OUTSHOT
+    </p>
+</div>
+
+<section class="outshot-welcome">
+    <h1>Bienvenido a OUTSHOT</h1>
+    <p>
+        Administrá la información de la tienda desde un solo lugar.
+    </p>
+</section>
+
+<div class="module-grid">
+
+    <a asp-controller="Categorias"
+       asp-action="Index"
+       class="module-card">
+
+        <div class="module-card-icon">
+            ◇
+        </div>
+
+        <h3>Categorías</h3>
+
+        <p>
+            Organizá las categorías utilizadas para clasificar
+            los productos de la tienda.
+        </p>
+    </a>
+
+    <a asp-controller="Productos"
+       asp-action="Index"
+       class="module-card">
+
+        <div class="module-card-icon">
+            ▢
+        </div>
+
+        <h3>Productos</h3>
+
+        <p>
+            Registrá y administrá las prendas disponibles
+            dentro del catálogo de OUTSHOT.
+        </p>
+    </a>
+
+</div>

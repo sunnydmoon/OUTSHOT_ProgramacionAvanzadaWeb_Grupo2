@@ -1,0 +1,217 @@
+@model IEnumerable<Outshot.Models.Categoria>
+
+@{
+    ViewData["Title"] = "Categorías";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Categorías</h1>
+    <p class="page-subtitle">
+        Organizá los productos de OUTSHOT por categoría.
+    </p>
+</div>
+
+<div class="module-layout">
+
+    <section class="outshot-panel outshot-panel-form">
+
+        <div class="panel-header">
+            <h2>Nueva categoría</h2>
+            <p>Agregá una nueva categoría para los productos.</p>
+        </div>
+
+        <div class="panel-body">
+
+            <form asp-action="Create" method="post">
+
+                <div class="form-group">
+                    <label for="Nombre">Nombre</label>
+
+                    <input id="Nombre"
+                           name="Nombre"
+                           class="form-control"
+                           placeholder="Ej. Camisetas"
+                           required />
+                </div>
+
+                <div class="form-group">
+                    <label for="Descripcion">Descripción</label>
+
+                    <textarea id="Descripcion"
+                              name="Descripcion"
+                              class="form-control"
+                              rows="4"
+                              placeholder="Descripción de la categoría"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-check">
+
+                        <input class="form-check-input"
+                               type="checkbox"
+                               id="Activo"
+                               name="Activo"
+                               value="true"
+                               checked />
+
+                        <input type="hidden"
+                               name="Activo"
+                               value="false" />
+
+                        <label class="form-check-label" for="Activo">
+                            Categoría activa
+                        </label>
+
+                    </div>
+                </div>
+
+                <button type="submit" class="outshot-btn">
+                    Guardar categoría
+                </button>
+
+            </form>
+
+        </div>
+
+    </section>
+
+
+    <section class="outshot-panel">
+
+        <div class="panel-header">
+            <h2>Listado de categorías</h2>
+
+            <p>
+                Consultá y administrá las categorías registradas.
+            </p>
+        </div>
+
+        <div class="panel-body">
+
+            <div class="mb-3">
+                <input type="text"
+                       id="buscarCategoria"
+                       class="form-control"
+                       placeholder="Buscar categoría..." />
+            </div>
+
+            <div class="table-responsive">
+
+                <table class="table" id="tablaCategorias">
+
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @if (Model.Any())
+                        {
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+
+                                    <td>
+                                        <strong>@item.Nombre</strong>
+                                    </td>
+
+                                    <td>
+                                        @item.Descripcion
+                                    </td>
+
+                                    <td>
+                                        @if (item.Activo)
+                                        {
+                                            <span class="status-active">
+                                                Activa
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="status-inactive">
+                                                Inactiva
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        <div class="table-actions">
+
+                                            <a asp-action="Edit"
+                                               asp-route-id="@item.CategoriaId">
+                                                Editar
+                                            </a>
+
+                                            <a asp-action="Details"
+                                               asp-route-id="@item.CategoriaId">
+                                                Ver
+                                            </a>
+
+                                            <a asp-action="Delete"
+                                               asp-route-id="@item.CategoriaId">
+                                                Eliminar
+                                            </a>
+
+                                        </div>
+                                    </td>
+
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4"
+                                    class="text-center py-4">
+                                    No hay categorías registradas.
+                                </td>
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+@section Scripts {
+
+    <script>
+        document.getElementById("buscarCategoria")
+            .addEventListener("keyup", function() {
+
+                const texto = this.value.toLowerCase();
+
+                const filas = document.querySelectorAll(
+                    "#tablaCategorias tbody tr"
+                );
+
+                filas.forEach(function(fila) {
+
+                    const contenido = fila.innerText.toLowerCase();
+
+                    if (contenido.includes(texto)) {
+                        fila.style.display = "";
+                    }
+                    else {
+                        fila.style.display = "none";
+                    }
+
+                });
+
+            });
+    </script>
+
+}
