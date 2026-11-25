@@ -1,0 +1,105 @@
+﻿@model IEnumerable<Outshot.Models.Cliente>
+
+@{
+    ViewData["Title"] = "Clientes";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Clientes</h1>
+    <p class="page-subtitle">
+        Administrá los clientes registrados en OUTSHOT.
+    </p>
+</div>
+
+<div class="outshot-panel">
+
+    <div class="panel-header">
+        <h2>Listado de clientes</h2>
+        <p>Consultá y administrá la información de los clientes.</p>
+    </div>
+
+    <div class="panel-body">
+
+        <div class="mb-3">
+            <a asp-action="Create" class="outshot-btn">
+                Nuevo cliente
+            </a>
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table">
+
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Correo</th>
+                        <th>Teléfono</th>
+                        <th>Dirección</th>
+                        <th>Fecha de registro</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @if (Model.Any())
+                    {
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@item.Nombre</strong>
+                                </td>
+
+                                <td>@item.Correo</td>
+
+                                <td>@item.Telefono</td>
+
+                                <td>@item.Direccion</td>
+
+                                <td>
+                                    @item.FechaRegistro.ToString("dd/MM/yyyy")
+                                </td>
+
+                                <td>
+                                    <div class="table-actions">
+
+                                        <a asp-action="Edit"
+                                           asp-route-id="@item.ClienteId">
+                                            Editar
+                                        </a>
+
+                                        <a asp-action="Details"
+                                           asp-route-id="@item.ClienteId">
+                                            Ver
+                                        </a>
+
+                                        <a asp-action="Delete"
+                                           asp-route-id="@item.ClienteId">
+                                            Eliminar
+                                        </a>
+
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                No hay clientes registrados.
+                            </td>
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>

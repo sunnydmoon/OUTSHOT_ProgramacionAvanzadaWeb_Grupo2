@@ -1,0 +1,75 @@
+﻿@model Outshot.Models.DetallePedido
+
+@{
+    ViewData["Title"] = "Editar producto del pedido";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Editar producto</h1>
+    <p class="page-subtitle">
+        Modificá la cantidad del producto seleccionado.
+    </p>
+</div>
+
+<div class="module-layout">
+
+    <section class="outshot-panel outshot-panel-form">
+
+        <div class="panel-header">
+            <h2>@Model.Producto.Nombre</h2>
+            <p>Pedido #@Model.PedidoId</p>
+        </div>
+
+        <div class="panel-body">
+
+            <p>
+                Precio unitario:
+                <strong>₡@Model.PrecioUnitario.ToString("N2")</strong>
+            </p>
+
+            <p>
+                Cantidad actual: <strong>@Model.Cantidad</strong>
+            </p>
+
+            <form asp-action="EditarDetalle"
+                  asp-route-id="@Model.DetallePedidoId"
+                  method="post">
+
+                <div asp-validation-summary="All"
+                     class="text-danger">
+                </div>
+
+                <div class="form-group">
+                    <label for="cantidad">Nueva cantidad</label>
+
+                    <input type="number"
+                           id="cantidad"
+                           name="cantidad"
+                           class="form-control"
+                           min="1"
+                           value="@Model.Cantidad"
+                           required />
+                </div>
+
+                <div class="form-group mt-3">
+
+                    <button type="submit" class="outshot-btn">
+                        Guardar cambios
+                    </button>
+
+                    <a asp-action="Details"
+                       asp-route-id="@Model.PedidoId"
+                       class="btn btn-secondary">
+                        Cancelar
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </section>
+
+</div>
+

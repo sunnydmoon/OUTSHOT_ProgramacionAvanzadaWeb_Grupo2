@@ -1,0 +1,118 @@
+﻿@model IEnumerable<Outshot.Models.Pedido>
+
+@{
+    ViewData["Title"] = "Pedidos";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Pedidos</h1>
+    <p class="page-subtitle">
+        Administrá los pedidos registrados en OUTSHOT.
+    </p>
+</div>
+
+<div class="outshot-panel">
+
+    <div class="panel-header">
+        <h2>Listado de pedidos</h2>
+        <p>Consultá y administrá los pedidos de los clientes.</p>
+    </div>
+
+    <div class="panel-body">
+
+        <div class="mb-3">
+            <a asp-action="Create" class="outshot-btn">
+                Nuevo pedido
+            </a>
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table">
+
+                <thead>
+                    <tr>
+                        <th>Número</th>
+                        <th>Cliente</th>
+                        <th>Usuario</th>
+                        <th>Fecha</th>
+                        <th>Estado</th>
+                        <th>Total</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @if (Model.Any())
+                    {
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@item.PedidoId</strong>
+                                </td>
+
+                                <td>
+                                    @item.Cliente.Nombre
+                                </td>
+
+                                <td>
+                                    @item.Usuario.Nombre
+                                </td>
+
+                                <td>
+                                    @item.Fecha.ToString("dd/MM/yyyy")
+                                </td>
+
+                                <td>
+                                    @item.Estado
+                                </td>
+
+                                <td>
+                                    <strong>
+                                        ₡@item.Total.ToString("N2")
+                                    </strong>
+                                </td>
+
+                                <td>
+                                    <div class="table-actions">
+
+                                        <a asp-action="Edit"
+                                           asp-route-id="@item.PedidoId">
+                                            Editar
+                                        </a>
+
+                                        <a asp-action="Details"
+                                           asp-route-id="@item.PedidoId">
+                                            Ver
+                                        </a>
+
+                                        <a asp-action="Delete"
+                                           asp-route-id="@item.PedidoId">
+                                            Eliminar
+                                        </a>
+
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                No hay pedidos registrados.
+                            </td>
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>

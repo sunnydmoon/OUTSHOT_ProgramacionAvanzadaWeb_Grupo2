@@ -1,0 +1,116 @@
+﻿@model Outshot.Models.Cliente
+
+@{
+    ViewData["Title"] = "Nuevo cliente";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Nuevo cliente</h1>
+    <p class="page-subtitle">
+        Registrá un nuevo cliente en OUTSHOT.
+    </p>
+</div>
+
+<div class="module-layout">
+
+    <section class="outshot-panel outshot-panel-form">
+
+        <div class="panel-header">
+            <h2>Información del cliente</h2>
+            <p>Completá los datos para registrar al cliente.</p>
+        </div>
+
+        <div class="panel-body">
+
+            <form asp-action="Create" method="post">
+
+                <div asp-validation-summary="ModelOnly"
+                     class="text-danger">
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Nombre" class="control-label">
+                        Nombre completo
+                    </label>
+
+                    <input asp-for="Nombre"
+                           class="form-control"
+                           placeholder="Ej. Juan Pérez" />
+
+                    <span asp-validation-for="Nombre"
+                          class="text-danger">
+                    </span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Correo" class="control-label">
+                        Correo electrónico
+                    </label>
+
+                    <input asp-for="Correo"
+                           type="email"
+                           class="form-control"
+                           placeholder="Ej. cliente@correo.com" />
+
+                    <span asp-validation-for="Correo"
+                          class="text-danger">
+                    </span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Telefono" class="control-label">
+                        Teléfono
+                    </label>
+
+                    <input asp-for="Telefono"
+                           type="tel"
+                           class="form-control"
+                           placeholder="Ej. 8888-8888" />
+
+                    <span asp-validation-for="Telefono"
+                          class="text-danger">
+                    </span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Direccion" class="control-label">
+                        Dirección
+                    </label>
+
+                    <textarea asp-for="Direccion"
+                              class="form-control"
+                              rows="3"
+                              placeholder="Dirección del cliente">
+                    </textarea>
+
+                    <span asp-validation-for="Direccion"
+                          class="text-danger">
+                    </span>
+                </div>
+
+                <div class="form-group mt-3">
+
+                    <button type="submit" class="outshot-btn">
+                        Guardar cliente
+                    </button>
+
+                    <a asp-action="Index" class="btn btn-secondary">
+                        Volver al listado
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </section>
+
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
+

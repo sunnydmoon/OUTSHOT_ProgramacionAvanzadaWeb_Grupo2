@@ -1,0 +1,78 @@
+﻿@{
+    ViewData["Title"] = "Agregar producto al pedido";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Agregar producto</h1>
+    <p class="page-subtitle">
+        Incorporá productos al pedido seleccionado.
+    </p>
+</div>
+
+<div class="module-layout">
+
+    <section class="outshot-panel outshot-panel-form">
+
+        <div class="panel-header">
+            <h2>Producto del pedido #@ViewBag.PedidoId</h2>
+            <p>Seleccioná el producto y la cantidad solicitada.</p>
+        </div>
+
+        <div class="panel-body">
+
+            <form asp-action="AgregarProducto"
+                  asp-route-id="@ViewBag.PedidoId"
+                  method="post">
+
+                <div asp-validation-summary="All"
+                     class="text-danger">
+                </div>
+
+                <div class="form-group">
+                    <label for="productoId">Producto</label>
+
+                    <select id="productoId"
+                            name="productoId"
+                            class="form-select"
+                            asp-items="ViewBag.ProductoId"
+                            required>
+                        <option value="">
+                            Seleccionar producto
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="cantidad">Cantidad</label>
+
+                    <input type="number"
+                           id="cantidad"
+                           name="cantidad"
+                           class="form-control"
+                           min="1"
+                           value="1"
+                           required />
+                </div>
+
+                <div class="form-group mt-3">
+
+                    <button type="submit" class="outshot-btn">
+                        Agregar al pedido
+                    </button>
+
+                    <a asp-action="Details"
+                       asp-route-id="@ViewBag.PedidoId"
+                       class="btn btn-secondary">
+                        Volver al pedido
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </section>
+
+</div>
+

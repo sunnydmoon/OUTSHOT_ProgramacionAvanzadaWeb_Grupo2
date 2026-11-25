@@ -1,0 +1,82 @@
+﻿@model Outshot.Models.Cliente
+
+@{
+    ViewData["Title"] = "Detalles del cliente";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Detalles del cliente</h1>
+    <p class="page-subtitle">
+        Consultá la información del cliente registrado en OUTSHOT.
+    </p>
+</div>
+
+<div class="module-layout">
+
+    <section class="outshot-panel">
+
+        <div class="panel-header">
+            <h2>Información del cliente</h2>
+            <p>Datos generales del cliente seleccionado.</p>
+        </div>
+
+        <div class="panel-body">
+
+            <dl class="row">
+
+                <dt class="col-sm-4">
+                    Nombre completo
+                </dt>
+                <dd class="col-sm-8">
+                    @Model.Nombre
+                </dd>
+
+                <dt class="col-sm-4">
+                    Correo electrónico
+                </dt>
+                <dd class="col-sm-8">
+                    @Model.Correo
+                </dd>
+
+                <dt class="col-sm-4">
+                    Teléfono
+                </dt>
+                <dd class="col-sm-8">
+                    @Model.Telefono
+                </dd>
+
+                <dt class="col-sm-4">
+                    Dirección
+                </dt>
+                <dd class="col-sm-8">
+                    @Model.Direccion
+                </dd>
+
+                <dt class="col-sm-4">
+                    Fecha de registro
+                </dt>
+                <dd class="col-sm-8">
+                    @Model.FechaRegistro.ToString("dd/MM/yyyy HH:mm")
+                </dd>
+
+            </dl>
+
+            <div class="mt-3">
+
+                <a asp-action="Edit"
+                   asp-route-id="@Model.ClienteId"
+                   class="outshot-btn">
+                    Editar cliente
+                </a>
+
+                <a asp-action="Index" class="btn btn-secondary">
+                    Volver al listado
+                </a>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
