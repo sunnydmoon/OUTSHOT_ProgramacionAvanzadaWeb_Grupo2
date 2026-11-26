@@ -1,43 +1,102 @@
 @model Outshot.Models.Categoria
 
 @{
-    ViewData["Title"] = "Delete";
+    ViewData["Title"] = "Eliminar categoría";
 }
 
-<h1>Delete</h1>
+<div class="page-header">
+    <h1 class="page-title">Eliminar categoría</h1>
+    <p class="page-subtitle">
+        Confirmá la eliminación de la categoría seleccionada.
+    </p>
+</div>
 
-<h3>Are you sure you want to delete this?</h3>
+<div class="module-layout">
+    <section class="outshot-panel outshot-panel-form">
+        <div class="panel-header">
+            <h2>Confirmar eliminación</h2>
+            <p>Revisá la información antes de continuar.</p>
+        </div>
 
-<div>
-    <h4>Categoria</h4>
-    <hr />
+        <div class="panel-body">
+            <div class="alert alert-warning">
+                ¿Estás seguro de que querés eliminar esta categoría?
+            </div>
 
-    <dl class="row">
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Nombre)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Nombre)
-        </dd>
+            <div class="form-group">
+                <label>Nombre</label>
+                <p><strong>@Model.Nombre</strong></p>
+            </div>
 
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Descripcion)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Descripcion)
-        </dd>
+            <div class="form-group">
+                <label>Descripción</label>
 
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Activo)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Activo)
-        </dd>
-    </dl>
+                @if (!string.IsNullOrWhiteSpace(Model.Descripcion))
+                {
+                    <p>@Model.Descripcion</p>
+                }
+                else
+                {
+                    <p class="text-muted">Sin descripción</p>
+                }
+            </div>
 
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="CategoriaId" />
-        <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-action="Index">Back to List</a>
-    </form>
+            <div class="form-group">
+                <label>Estado</label>
+
+                <div class="mt-2">
+                    @if (Model.Activo)
+                    {
+                        <span class="status-active">Activa</span>
+                    }
+                    else
+                    {
+                        <span class="status-inactive">Inactiva</span>
+                    }
+                </div>
+            </div>
+
+            <form asp-action="Delete"
+                  asp-route-id="@Model.CategoriaId"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" asp-for="CategoriaId" />
+
+                <div class="d-flex align-items-center gap-3 mt-4">
+                    <button type="submit" class="btn btn-danger">
+                        Eliminar categoría
+                    </button>
+
+                    <a asp-action="Index">
+                        Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="outshot-panel">
+        <div class="panel-header">
+            <h2>Información importante</h2>
+            <p>Antes de eliminar la categoría.</p>
+        </div>
+
+        <div class="panel-body">
+            <p>
+                Al confirmar, la categoría se eliminará del sistema.
+            </p>
+
+            <p>
+                Si tiene productos asociados, OUTSHOT no permitirá
+                eliminarla para evitar afectar los registros existentes.
+            </p>
+
+            <p class="text-muted">
+                Si no querés continuar, seleccioná Cancelar
+                para regresar al listado de categorías.
+            </p>
+        </div>
+    </section>
 </div>

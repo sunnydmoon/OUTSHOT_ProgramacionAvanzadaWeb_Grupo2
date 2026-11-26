@@ -11,6 +11,20 @@
     </p>
 </div>
 
+@if (TempData["Mensaje"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Mensaje"]
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
+}
+
 <div class="module-layout">
 
     <section class="outshot-panel outshot-panel-form">
@@ -24,14 +38,24 @@
 
             <form asp-action="Create" method="post">
 
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="ModelOnly"
+                     class="text-danger mb-3"></div>
+
                 <div class="form-group">
                     <label for="Nombre">Nombre</label>
 
                     <input id="Nombre"
                            name="Nombre"
                            class="form-control"
+                           value="@ViewData["Nombre"]"
                            placeholder="Ej. Camisetas"
+                           minlength="3"
+                           maxlength="100"
                            required />
+
+                    @Html.ValidationMessage("Nombre", "", new { @class = "text-danger" })
                 </div>
 
                 <div class="form-group">
@@ -41,7 +65,10 @@
                               name="Descripcion"
                               class="form-control"
                               rows="4"
-                              placeholder="Descripción de la categoría"></textarea>
+                              maxlength="500"
+                              placeholder="Descripción de la categoría">@ViewData["Descripcion"]</textarea>
+
+                    @Html.ValidationMessage("Descripcion", "", new { @class = "text-danger" })
                 </div>
 
                 <div class="form-group">
@@ -52,7 +79,7 @@
                                id="Activo"
                                name="Activo"
                                value="true"
-                               checked />
+                               checked="@(ViewData["Activo"] is bool activo ? activo : true)" />
 
                         <input type="hidden"
                                name="Activo"
@@ -72,15 +99,12 @@
             </form>
 
         </div>
-
     </section>
-
 
     <section class="outshot-panel">
 
         <div class="panel-header">
             <h2>Listado de categorías</h2>
-
             <p>
                 Consultá y administrá las categorías registradas.
             </p>
@@ -166,8 +190,7 @@
                         else
                         {
                             <tr>
-                                <td colspan="4"
-                                    class="text-center py-4">
+                                <td colspan="4" class="text-center py-4">
                                     No hay categorías registradas.
                                 </td>
                             </tr>
@@ -185,15 +208,12 @@
 
 </div>
 
-
 @section Scripts {
-
     <script>
         document.getElementById("buscarCategoria")
             .addEventListener("keyup", function() {
 
                 const texto = this.value.toLowerCase();
-
                 const filas = document.querySelectorAll(
                     "#tablaCategorias tbody tr"
                 );
@@ -210,8 +230,6 @@
                     }
 
                 });
-
             });
     </script>
-
 }

@@ -1,72 +1,163 @@
 @model Outshot.Models.Producto
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Editar producto";
 }
 
-<h1>Edit</h1>
-
-<h4>Producto</h4>
-<hr />
-
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-            <input type="hidden" asp-for="ProductoId" />
-
-            <div class="form-group">
-                <label asp-for="CategoriaId" class="control-label"></label>
-                <select asp-for="CategoriaId" class="form-control" asp-items="ViewBag.CategoriaId"></select>
-                <span asp-validation-for="CategoriaId" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Nombre" class="control-label"></label>
-                <input asp-for="Nombre" class="form-control" />
-                <span asp-validation-for="Nombre" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Descripcion" class="control-label"></label>
-                <input asp-for="Descripcion" class="form-control" />
-                <span asp-validation-for="Descripcion" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Precio" class="control-label"></label>
-                <input asp-for="Precio" class="form-control" />
-                <span asp-validation-for="Precio" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="ImagenUrl" class="control-label"></label>
-                <input asp-for="ImagenUrl" class="form-control" />
-                <span asp-validation-for="ImagenUrl" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Activo" class="control-label"></label>
-                <input asp-for="Activo" class="form-check-input" />
-                <span asp-validation-for="Activo" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="FechaRegistro" class="control-label"></label>
-                <input asp-for="FechaRegistro" class="form-control" />
-                <span asp-validation-for="FechaRegistro" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
-    </div>
+<div class="page-header">
+    <h1 class="page-title">Editar producto</h1>
+    <p class="page-subtitle">
+        Modificá la información del producto registrado en OUTSHOT.
+    </p>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
+<div class="module-layout">
+    <section class="outshot-panel outshot-panel-form">
+        <div class="panel-header">
+            <h2>Información del producto</h2>
+            <p>Actualizá los datos que necesitás modificar.</p>
+        </div>
+
+        <div class="panel-body">
+            <form asp-action="Edit"
+                  asp-route-id="@Model.ProductoId"
+                  method="post"
+                  enctype="multipart/form-data">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" asp-for="ProductoId" />
+
+                <div asp-validation-summary="ModelOnly"
+                     class="text-danger mb-3"></div>
+
+                <div class="form-group">
+                    <label asp-for="Nombre">Nombre</label>
+                    <input asp-for="Nombre"
+                           class="form-control"
+                           minlength="3"
+                           maxlength="100"
+                           required />
+                    <span asp-validation-for="Nombre"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="CategoriaId">Categoría</label>
+                    <select asp-for="CategoriaId"
+                            class="form-select"
+                            asp-items="ViewBag.CategoriaId"
+                            required>
+                        <option value="">Seleccionar categoría</option>
+                    </select>
+                    <span asp-validation-for="CategoriaId"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Precio">Precio</label>
+                    <div class="input-group">
+                        <span class="input-group-text">₡</span>
+                        <input asp-for="Precio"
+                               type="number"
+                               min="0.01"
+                               step="0.01"
+                               class="form-control"
+                               required />
+                    </div>
+                    <span asp-validation-for="Precio"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label>Imagen actual</label>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.ImagenUrl))
+                    {
+                        <div class="mt-2 mb-3">
+                            <img src="@Url.Content("~/images/productos/" + Model.ImagenUrl)"
+                                 alt="@Model.Nombre"
+                                 style="max-width: 180px; max-height: 180px; object-fit: contain; border-radius: 8px;" />
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">
+                            Este producto no tiene una imagen registrada.
+                        </p>
+                    }
+                </div>
+
+                <div class="form-group">
+                    <label for="Imagen">Cambiar imagen (opcional)</label>
+                    <input id="Imagen"
+                           name="Imagen"
+                           type="file"
+                           accept=".jpg,.jpeg,.png,.webp"
+                           class="form-control" />
+                    <div class="form-text">
+                        Si no seleccionás otra imagen, se conservará la actual.
+                        Formatos permitidos: JPG, PNG y WEBP. Máximo 5 MB.
+                    </div>
+                    @Html.ValidationMessage("Imagen", "", new { @class = "text-danger" })
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Descripcion">Descripción</label>
+                    <textarea asp-for="Descripcion"
+                              class="form-control"
+                              rows="3"
+                              maxlength="500"
+                              placeholder="Descripción del producto"></textarea>
+                    <span asp-validation-for="Descripcion"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-check">
+                        <input asp-for="Activo"
+                               class="form-check-input" />
+                        <label asp-for="Activo"
+                               class="form-check-label">
+                            Producto activo
+                        </label>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-3 mt-3">
+                    <button type="submit" class="outshot-btn">
+                        Guardar cambios
+                    </button>
+
+                    <a asp-action="Index">
+                        Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="outshot-panel">
+        <div class="panel-header">
+            <h2>Editar producto</h2>
+            <p>Información del producto seleccionado.</p>
+        </div>
+
+        <div class="panel-body">
+            <p><strong>Producto:</strong> @Model.Nombre</p>
+            <p>
+                <strong>Fecha de registro:</strong>
+                @Model.FechaRegistro.ToString("dd/MM/yyyy HH:mm")
+            </p>
+            <p>
+                <strong>Estado:</strong>
+                @(Model.Activo ? "Activo" : "Inactivo")
+            </p>
+            <p class="text-muted">
+                La fecha de registro se conserva automáticamente al guardar los cambios.
+            </p>
+        </div>
+    </section>
 </div>
 
 @section Scripts {
@@ -74,3 +165,4 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
 }
+
