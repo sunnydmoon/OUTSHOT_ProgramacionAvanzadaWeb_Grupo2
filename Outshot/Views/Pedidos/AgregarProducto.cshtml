@@ -25,7 +25,12 @@
                   method="post">
 
                 <div asp-validation-summary="All"
-                     class="text-danger">
+                     class="text-danger mb-3">
+                </div>
+
+                <div class="alert alert-info">
+                    Las existencias se validarán automáticamente
+                    antes de agregar el producto al pedido.
                 </div>
 
                 <div class="form-group">
@@ -36,9 +41,11 @@
                             class="form-select"
                             asp-items="ViewBag.ProductoId"
                             required>
+
                         <option value="">
                             Seleccionar producto
                         </option>
+
                     </select>
                 </div>
 
@@ -71,8 +78,5 @@
             </form>
 
         </div>
-
     </section>
-
 </div>
-

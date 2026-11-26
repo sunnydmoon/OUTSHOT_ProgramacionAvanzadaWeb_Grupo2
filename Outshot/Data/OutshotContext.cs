@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿
+using Microsoft.EntityFrameworkCore;
 using Outshot.Models;
 
 namespace Outshot.Data
@@ -81,6 +82,13 @@ namespace Outshot.Data
                 .HasMany(p => p.DetallePedidos)
                 .WithOne(d => d.Producto)
                 .HasForeignKey(d => d.ProductoId);
+
+            // Relación uno a uno opcional entre Cliente y Usuario
+            modelBuilder.Entity<Cliente>()
+                .HasOne(c => c.Usuario)
+                .WithOne(u => u.Cliente)
+                .HasForeignKey<Cliente>(c => c.UsuarioId)
+                .IsRequired(false);
         }
     }
 }

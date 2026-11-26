@@ -2,20 +2,33 @@
 
 @{
     ViewData["Title"] = "Pedidos";
+    bool esAdministrador = User.IsInRole("Administrador");
 }
 
 <div class="page-header">
-    <h1 class="page-title">Pedidos</h1>
+    <h1 class="page-title">
+        @(esAdministrador ? "Gestión de pedidos" : "Mis pedidos")
+    </h1>
+
     <p class="page-subtitle">
-        Administrá los pedidos registrados en OUTSHOT.
+        @(esAdministrador
+            ? "Administrá los pedidos registrados en OUTSHOT."
+            : "Consultá tus pedidos y revisá su estado actual.")
     </p>
 </div>
 
 <div class="outshot-panel">
 
     <div class="panel-header">
-        <h2>Listado de pedidos</h2>
-        <p>Consultá y administrá los pedidos de los clientes.</p>
+        <h2>
+            @(esAdministrador ? "Listado de pedidos" : "Historial de pedidos")
+        </h2>
+
+        <p>
+            @(esAdministrador
+                ? "Consultá y administrá los pedidos de los clientes."
+                : "Aquí encontrarás los pedidos asociados a tu cuenta.")
+        </p>
     </div>
 
     <div class="panel-body">
@@ -33,8 +46,13 @@
                 <thead>
                     <tr>
                         <th>Número</th>
-                        <th>Cliente</th>
-                        <th>Usuario</th>
+
+                        @if (esAdministrador)
+                        {
+                            <th>Cliente</th>
+                            <th>Usuario</th>
+                        }
+
                         <th>Fecha</th>
                         <th>Estado</th>
                         <th>Total</th>
@@ -44,22 +62,26 @@
 
                 <tbody>
 
-                    @if (Model.Any())
+                    @if (Model != null && Model.Any())
                     {
                         @foreach (var item in Model)
                         {
                             <tr>
+
                                 <td>
                                     <strong>@item.PedidoId</strong>
                                 </td>
 
-                                <td>
-                                    @item.Cliente.Nombre
-                                </td>
+                                @if (esAdministrador)
+                                {
+                                    <td>
+                                        @(item.Cliente?.Nombre ?? "No disponible")
+                                    </td>
 
-                                <td>
-                                    @item.Usuario.Nombre
-                                </td>
+                                    <td>
+                                        @(item.Usuario?.Nombre ?? "No disponible")
+                                    </td>
+                                }
 
                                 <td>
                                     @item.Fecha.ToString("dd/MM/yyyy")
@@ -78,31 +100,40 @@
                                 <td>
                                     <div class="table-actions">
 
-                                        <a asp-action="Edit"
-                                           asp-route-id="@item.PedidoId">
-                                            Editar
-                                        </a>
-
                                         <a asp-action="Details"
                                            asp-route-id="@item.PedidoId">
                                             Ver
                                         </a>
 
-                                        <a asp-action="Delete"
-                                           asp-route-id="@item.PedidoId">
-                                            Eliminar
-                                        </a>
+                                        @if (esAdministrador)
+                                        {
+                                            <a asp-action="Edit"
+                                               asp-route-id="@item.PedidoId">
+                                                Editar
+                                            </a>
+
+                                            <a asp-action="Delete"
+                                               asp-route-id="@item.PedidoId">
+                                                Eliminar
+                                            </a>
+                                        }
 
                                     </div>
                                 </td>
+
                             </tr>
                         }
                     }
                     else
                     {
                         <tr>
-                            <td colspan="7" class="text-center py-4">
-                                No hay pedidos registrados.
+                            <td colspan="@(esAdministrador ? 7 : 5)"
+                                class="text-center py-4">
+
+                                @(esAdministrador
+                                    ? "No hay pedidos registrados."
+                                    : "Todavía no tienes pedidos registrados.")
+
                             </td>
                         </tr>
                     }

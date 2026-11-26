@@ -1,10 +1,13 @@
 ﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Outshot.Data;
 using Outshot.Models;
+using System.Security.Claims;
 
+[Authorize]
 public class PedidosController : Controller
 {
     private readonly OutshotContext _context;
@@ -19,7 +22,19 @@ public class PedidosController : Controller
     {
         var pedidos = _context.Pedidos
             .Include(p => p.Cliente)
-            .Include(p => p.Usuario);
+            .Include(p => p.Usuario)
+            .AsQueryable();
+
+        // El cliente únicamente consulta sus propios pedidos.
+        if (!User.IsInRole("Administrador"))
+        {
+            int? usuarioId = ObtenerUsuarioId();
+
+            if (usuarioId == null)
+                return Forbid();
+
+            pedidos = pedidos.Where(p => p.UsuarioId == usuarioId.Value);
+        }
 
         return View(await pedidos.ToListAsync());
     }
@@ -40,6 +55,13 @@ public class PedidosController : Controller
         if (pedido == null)
             return NotFound();
 
+        // Verificar que el pedido pertenezca al cliente autenticado.
+        if (!User.IsInRole("Administrador") &&
+            !EsPedidoPropio(pedido))
+        {
+            return Forbid();
+        }
+
         return View(pedido);
     }
 
@@ -56,15 +78,41 @@ public class PedidosController : Controller
     public async Task<IActionResult> Create(
         [Bind("ClienteId,UsuarioId,Estado")] Pedido pedido)
     {
+        // Para clientes, los identificadores se obtienen
+        // desde la cuenta autenticada y no desde el formulario.
+        if (!User.IsInRole("Administrador"))
+        {
+            int? usuarioId = ObtenerUsuarioId();
+
+            if (usuarioId == null)
+                return Forbid();
+
+            var cliente = await _context.Clientes
+                .FirstOrDefaultAsync(c => c.UsuarioId == usuarioId.Value);
+
+            if (cliente == null)
+                return BadRequest(
+                    "No existe un registro de cliente asociado a esta cuenta.");
+
+            pedido.UsuarioId = usuarioId.Value;
+            pedido.ClienteId = cliente.ClienteId;
+            pedido.Estado = "Pendiente";
+        }
+
         if (ModelState.IsValid)
         {
+            // Todo pedido nuevo inicia en estado Pendiente.
+            pedido.Estado = "Pendiente";
             pedido.Fecha = DateTime.Now;
             pedido.Total = 0;
 
             _context.Add(pedido);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction(nameof(Index));
+            // Después de crear el pedido, se dirige directamente
+            // a agregar el primer producto para evitar dejarlo vacío.
+            return RedirectToAction(
+                nameof(AgregarProducto), new { id = pedido.PedidoId });
         }
 
         CargarListas(pedido.ClienteId, pedido.UsuarioId);
@@ -77,10 +125,19 @@ public class PedidosController : Controller
         if (id == null)
             return NotFound();
 
-        var pedido = await _context.Pedidos.FindAsync(id);
+        var pedido = await _context.Pedidos
+            .FirstOrDefaultAsync(p => p.PedidoId == id);
 
         if (pedido == null)
             return NotFound();
+
+        // El cliente solo puede modificar sus propios pedidos.
+        if (!User.IsInRole("Administrador") && !EsPedidoPropio(pedido))
+            return Forbid();
+
+        // No se permiten modificaciones cuando el pedido ya fue procesado.
+        if (!string.Equals(pedido.Estado, "Pendiente", StringComparison.OrdinalIgnoreCase))
+            return BadRequest("Solo se pueden agregar productos a pedidos pendientes.");
 
         CargarProductos();
         ViewBag.PedidoId = pedido.PedidoId;
@@ -94,15 +151,36 @@ public class PedidosController : Controller
     public async Task<IActionResult> AgregarProducto(
         int id, int productoId, int cantidad)
     {
-        var pedido = await _context.Pedidos.FindAsync(id);
+        var pedido = await _context.Pedidos
+            .FirstOrDefaultAsync(p => p.PedidoId == id);
 
         if (pedido == null)
             return NotFound();
+
+        // El cliente solo puede modificar sus propios pedidos.
+        if (!User.IsInRole("Administrador") && !EsPedidoPropio(pedido))
+            return Forbid();
+
+        if (!string.Equals(pedido.Estado, "Pendiente", StringComparison.OrdinalIgnoreCase))
+            return BadRequest("Solo se pueden agregar productos a pedidos pendientes.");
+
+        if (productoId <= 0)
+        {
+            ModelState.AddModelError(
+                "productoId", "Debe seleccionar un producto.");
+        }
 
         if (cantidad <= 0)
         {
             ModelState.AddModelError(
                 "cantidad", "La cantidad debe ser mayor que cero.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            CargarProductos();
+            ViewBag.PedidoId = pedido.PedidoId;
+            return View();
         }
 
         var producto = await _context.Productos
@@ -119,10 +197,10 @@ public class PedidosController : Controller
             ModelState.AddModelError(
                 "productoId", "El producto no tiene inventario registrado.");
         }
-        else if (cantidad > producto.Inventario.Existencias)
+        else if (producto.Inventario.Existencias < cantidad)
         {
             ModelState.AddModelError(
-                "cantidad", "No hay suficientes existencias.");
+                "cantidad", "No hay suficientes existencias para esa cantidad.");
         }
 
         if (!ModelState.IsValid)
@@ -137,7 +215,21 @@ public class PedidosController : Controller
 
         try
         {
-            decimal subtotal = producto!.Precio * cantidad;
+            // Se vuelve a comprobar la existencia dentro de la transacción.
+            // Esto reduce el riesgo de registrar una salida con inventario insuficiente.
+            var inventario = producto!.Inventario!;
+
+            if (inventario.Existencias < cantidad)
+            {
+                await transaccion.RollbackAsync();
+                ModelState.AddModelError(
+                    "cantidad", "Las existencias cambiaron. No hay suficiente inventario.");
+                CargarProductos();
+                ViewBag.PedidoId = pedido.PedidoId;
+                return View();
+            }
+
+            decimal subtotal = producto.Precio * cantidad;
 
             var detalle = new DetallePedido
             {
@@ -150,13 +242,13 @@ public class PedidosController : Controller
 
             _context.DetallesPedidos.Add(detalle);
 
-            producto.Inventario!.Existencias -= cantidad;
-            producto.Inventario.UltimaActualizacion = DateTime.Now;
+            inventario.Existencias -= cantidad;
+            inventario.UltimaActualizacion = DateTime.Now;
 
             pedido.Total += subtotal;
 
             RegistrarMovimiento(
-                producto.Inventario,
+                inventario,
                 pedido.UsuarioId,
                 "Salida",
                 cantidad,
@@ -174,7 +266,7 @@ public class PedidosController : Controller
             await transaccion.RollbackAsync();
 
             ModelState.AddModelError(
-                string.Empty, "No fue posible agregar el producto.");
+                string.Empty, "No fue posible agregar el producto. Intente nuevamente.");
 
             CargarProductos();
             ViewBag.PedidoId = pedido.PedidoId;
@@ -183,6 +275,7 @@ public class PedidosController : Controller
     }
 
     // GET: Pedidos/EditarDetalle/5
+    [Authorize(Roles = "Administrador")]
     public async Task<IActionResult> EditarDetalle(int? id)
     {
         if (id == null)
@@ -200,6 +293,7 @@ public class PedidosController : Controller
     }
 
     // POST: Pedidos/EditarDetalle/5
+    [Authorize(Roles = "Administrador")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> EditarDetalle(
@@ -299,6 +393,7 @@ public class PedidosController : Controller
     }
 
     // POST: Pedidos/EliminarDetalle/5
+    [Authorize(Roles = "Administrador")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> EliminarDetalle(int id)
@@ -354,6 +449,7 @@ public class PedidosController : Controller
     }
 
     // GET: Pedidos/Edit/5
+    [Authorize(Roles = "Administrador")]
     public async Task<IActionResult> Edit(int? id)
     {
         if (id == null)
@@ -369,6 +465,7 @@ public class PedidosController : Controller
     }
 
     // POST: Pedidos/Edit/5
+    [Authorize(Roles = "Administrador")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(
@@ -399,6 +496,7 @@ public class PedidosController : Controller
     }
 
     // GET: Pedidos/Delete/5
+    [Authorize(Roles = "Administrador")]
     public async Task<IActionResult> Delete(int? id)
     {
         if (id == null)
@@ -416,6 +514,7 @@ public class PedidosController : Controller
     }
 
     // POST: Pedidos/Delete/5
+    [Authorize(Roles = "Administrador")]
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
@@ -439,6 +538,51 @@ public class PedidosController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+
+    // POST: Pedidos/Confirmar/5
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Confirmar(int id)
+    {
+        var pedido = await _context.Pedidos
+            .Include(p => p.DetallePedidos)
+            .FirstOrDefaultAsync(p => p.PedidoId == id);
+
+        if (pedido == null)
+            return NotFound();
+
+        if (!User.IsInRole("Administrador") && !EsPedidoPropio(pedido))
+            return Forbid();
+
+        if (!string.Equals(
+            pedido.Estado,
+            "Pendiente",
+            StringComparison.OrdinalIgnoreCase))
+        {
+            TempData["ErrorPedido"] = "El pedido ya fue procesado.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        if (!pedido.DetallePedidos.Any())
+        {
+            TempData["ErrorPedido"] =
+                "No podés confirmar un pedido sin productos.";
+
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        pedido.Estado = "Confirmado";
+
+        await _context.SaveChangesAsync();
+
+        TempData["MensajePedido"] =
+            "El pedido fue confirmado correctamente.";
+
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+
+    // Registrar movimientos de inventario.
     private void RegistrarMovimiento(
         Inventario inventario,
         int usuarioId,
@@ -459,6 +603,28 @@ public class PedidosController : Controller
         _context.MovimientosInventario.Add(movimiento);
     }
 
+    // Obtener el identificador del usuario autenticado.
+    private int? ObtenerUsuarioId()
+    {
+        var identificador = User.FindFirstValue(
+            ClaimTypes.NameIdentifier);
+
+        if (int.TryParse(identificador, out int usuarioId))
+            return usuarioId;
+
+        return null;
+    }
+
+    // Comprobar si el pedido pertenece al usuario autenticado.
+    private bool EsPedidoPropio(Pedido pedido)
+    {
+        int? usuarioId = ObtenerUsuarioId();
+
+        return usuarioId.HasValue &&
+               pedido.UsuarioId == usuarioId.Value;
+    }
+
+    // Cargar listas para los formularios administrativos.
     private void CargarListas(
         int? clienteId = null,
         int? usuarioId = null)
@@ -478,6 +644,7 @@ public class PedidosController : Controller
         );
     }
 
+    // Cargar productos activos.
     private void CargarProductos()
     {
         ViewData["ProductoId"] = new SelectList(
@@ -487,5 +654,3 @@ public class PedidosController : Controller
         );
     }
 }
-
-

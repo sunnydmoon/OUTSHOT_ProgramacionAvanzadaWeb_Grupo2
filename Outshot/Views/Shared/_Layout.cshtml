@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8" />
@@ -36,13 +37,17 @@
                         </a>
                     </li>
 
-                    <li>
-                        <a asp-controller="Categorias"
-                           asp-action="Index">
-                            <span class="outshot-menu-icon">◇</span>
-                            <span>Categorías</span>
-                        </a>
-                    </li>
+                    @if (!User.Identity!.IsAuthenticated ||
+                         User.IsInRole("Administrador"))
+                    {
+                        <li>
+                            <a asp-controller="Categorias"
+                               asp-action="Index">
+                                <span class="outshot-menu-icon">◇</span>
+                                <span>Categorías</span>
+                            </a>
+                        </li>
+                    }
 
                     <li>
                         <a asp-controller="Productos"
@@ -52,6 +57,38 @@
                         </a>
                     </li>
 
+                    @if (User.Identity!.IsAuthenticated)
+                    {
+                        @if (User.IsInRole("Administrador"))
+                        {
+                            <li>
+                                <a asp-controller="Clientes"
+                                   asp-action="Index">
+                                    <span class="outshot-menu-icon">♙</span>
+                                    <span>Clientes</span>
+                                </a>
+                            </li>
+
+                            <li>
+                                <a asp-controller="Pedidos"
+                                   asp-action="Index">
+                                    <span class="outshot-menu-icon">▤</span>
+                                    <span>Gestión de pedidos</span>
+                                </a>
+                            </li>
+                        }
+                        else if (User.IsInRole("Cliente"))
+                        {
+                            <li>
+                                <a asp-controller="Pedidos"
+                                   asp-action="Index">
+                                    <span class="outshot-menu-icon">▤</span>
+                                    <span>Mis pedidos</span>
+                                </a>
+                            </li>
+                        }
+                    }
+
                 </ul>
             </nav>
 
@@ -60,13 +97,49 @@
         <div class="outshot-content">
 
             <header class="outshot-topbar">
-                <div class="outshot-user">
-                    <div class="outshot-user-circle">
-                        A
-                    </div>
 
-                    <span>Administrador</span>
+                <div class="outshot-user">
+
+                    @if (User.Identity!.IsAuthenticated)
+                    {
+                        <div class="outshot-user-circle">
+                            @(User.Identity.Name is string nombre &&
+                              nombre.Length > 0
+                                ? nombre.Substring(0, 1).ToUpper()
+                                : "U")
+                        </div>
+
+                        <span>@User.Identity.Name</span>
+
+                        <form asp-controller="Autenticacion"
+                              asp-action="Logout"
+                              method="post"
+                              class="d-inline ms-3">
+
+                            <button type="submit"
+                                    class="btn btn-outline-dark btn-sm">
+                                Cerrar sesión
+                            </button>
+
+                        </form>
+                    }
+                    else
+                    {
+                        <a asp-controller="Autenticacion"
+                           asp-action="Login"
+                           class="btn btn-outline-dark btn-sm me-2">
+                            Iniciar sesión
+                        </a>
+
+                        <a asp-controller="Autenticacion"
+                           asp-action="Registro"
+                           class="btn btn-dark btn-sm">
+                            Registrarse
+                        </a>
+                    }
+
                 </div>
+
             </header>
 
             <main class="outshot-main">
