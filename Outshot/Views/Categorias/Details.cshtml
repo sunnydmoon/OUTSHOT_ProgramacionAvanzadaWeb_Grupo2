@@ -1,40 +1,91 @@
 @model Outshot.Models.Categoria
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Detalle de la categoría";
 }
 
-<h1>Details</h1>
-
-<div>
-    <h4>Categoria</h4>
-    <hr />
-
-    <dl class="row">
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Nombre)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Nombre)
-        </dd>
-
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Descripcion)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Descripcion)
-        </dd>
-
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Activo)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Activo)
-        </dd>
-    </dl>
+<div class="page-header">
+    <h1 class="page-title">Detalle de la categoría</h1>
+    <p class="page-subtitle">
+        Consultá la información de la categoría registrada en OUTSHOT.
+    </p>
 </div>
 
-<div>
-    <a asp-action="Edit" asp-route-id="@Model.CategoriaId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+<div class="module-layout">
+    <section class="outshot-panel outshot-panel-form">
+        <div class="panel-header">
+            <h2>Categoría</h2>
+            <p>Información general de la categoría seleccionada.</p>
+        </div>
+
+        <div class="panel-body">
+            <div class="form-group">
+                <label>Nombre</label>
+                <p><strong>@Model.Nombre</strong></p>
+            </div>
+
+            <div class="form-group">
+                <label>Descripción</label>
+
+                @if (!string.IsNullOrWhiteSpace(Model.Descripcion))
+                {
+                    <p>@Model.Descripcion</p>
+                }
+                else
+                {
+                    <p class="text-muted">Sin descripción</p>
+                }
+            </div>
+
+            <div class="form-group">
+                <label>Estado</label>
+
+                <div class="mt-2">
+                    @if (Model.Activo)
+                    {
+                        <span class="status-active">Activa</span>
+                    }
+                    else
+                    {
+                        <span class="status-inactive">Inactiva</span>
+                    }
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="outshot-panel">
+        <div class="panel-header">
+            <h2>Información de la categoría</h2>
+            <p>Consultá los datos antes de realizar cambios.</p>
+        </div>
+
+        <div class="panel-body">
+            <p>
+                <strong>Nombre:</strong> @Model.Nombre
+            </p>
+
+            <p>
+                <strong>Estado:</strong>
+                @(Model.Activo ? "Activa" : "Inactiva")
+            </p>
+
+            <p class="text-muted">
+                Podés modificar la información de esta categoría
+                desde la opción Editar categoría.
+            </p>
+
+            <div class="d-flex align-items-center gap-3 mt-4">
+                <a asp-action="Edit"
+                   asp-route-id="@Model.CategoriaId"
+                   class="outshot-btn">
+                    Editar categoría
+                </a>
+
+                <a asp-action="Index">
+                    Volver a categorías
+                </a>
+            </div>
+        </div>
+    </section>
 </div>

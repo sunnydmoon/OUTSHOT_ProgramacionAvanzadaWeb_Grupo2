@@ -1,68 +1,104 @@
 @model Outshot.Models.Producto
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Detalle del producto";
 }
 
-<h1>Details</h1>
-
-<div>
-    <h4>Producto</h4>
-    <hr />
-
-    <dl class="row">
-        <dt class="col-sm-2">
-            Categoría
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Categoria.Nombre)
-        </dd>
-
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Nombre)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Nombre)
-        </dd>
-
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Descripcion)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Descripcion)
-        </dd>
-
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Precio)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Precio)
-        </dd>
-
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.ImagenUrl)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.ImagenUrl)
-        </dd>
-
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Activo)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Activo)
-        </dd>
-
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.FechaRegistro)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.FechaRegistro)
-        </dd>
-    </dl>
+<div class="page-header">
+    <h1 class="page-title">Detalle del producto</h1>
+    <p class="page-subtitle">
+        Consultá la información del producto registrado en OUTSHOT.
+    </p>
 </div>
 
-<div>
-    <a asp-action="Edit" asp-route-id="@Model.ProductoId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+<div class="module-layout">
+    <section class="outshot-panel outshot-panel-form">
+        <div class="panel-header">
+            <h2>Imagen del producto</h2>
+            <p>Fotografía registrada en el catálogo.</p>
+        </div>
+
+        <div class="panel-body">
+            @if (!string.IsNullOrWhiteSpace(Model.ImagenUrl))
+            {
+                <div class="text-center">
+                    <img src="@Url.Content("~/images/productos/" + Model.ImagenUrl)"
+                         alt="@Model.Nombre"
+                         class="img-fluid"
+                         style="max-width: 100%; max-height: 350px; object-fit: contain; border-radius: 8px;" />
+                </div>
+            }
+            else
+            {
+                <p class="text-muted text-center">
+                    Este producto no tiene una imagen registrada.
+                </p>
+            }
+        </div>
+    </section>
+
+    <section class="outshot-panel">
+        <div class="panel-header">
+            <h2>Información del producto</h2>
+            <p>Datos generales del producto seleccionado.</p>
+        </div>
+
+        <div class="panel-body">
+            <dl class="row">
+                <dt class="col-sm-4">Nombre</dt>
+                <dd class="col-sm-8">@Model.Nombre</dd>
+
+                <dt class="col-sm-4">Categoría</dt>
+                <dd class="col-sm-8">
+                    @(Model.Categoria?.Nombre ?? "Sin categoría")
+                </dd>
+
+                <dt class="col-sm-4">Precio</dt>
+                <dd class="col-sm-8">
+                    <strong>₡@Model.Precio.ToString("N2")</strong>
+                </dd>
+
+                <dt class="col-sm-4">Descripción</dt>
+                <dd class="col-sm-8">
+                    @if (!string.IsNullOrWhiteSpace(Model.Descripcion))
+                    {
+                        @Model.Descripcion
+                    }
+                    else
+                    {
+                        <span class="text-muted">Sin descripción</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-4">Estado</dt>
+                <dd class="col-sm-8">
+                    @if (Model.Activo)
+                    {
+                        <span class="status-active">Activo</span>
+                    }
+                    else
+                    {
+                        <span class="status-inactive">Inactivo</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-4">Fecha de registro</dt>
+                <dd class="col-sm-8">
+                    @Model.FechaRegistro.ToString("dd/MM/yyyy HH:mm")
+                </dd>
+            </dl>
+
+            <div class="d-flex align-items-center gap-3 mt-4">
+                <a asp-action="Edit"
+                   asp-route-id="@Model.ProductoId"
+                   class="outshot-btn">
+                    Editar producto
+                </a>
+
+                <a asp-action="Index">
+                    Volver a productos
+                </a>
+            </div>
+        </div>
+    </section>
 </div>

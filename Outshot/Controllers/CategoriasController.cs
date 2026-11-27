@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Outshot.Data;
@@ -12,73 +13,75 @@ public class CategoriasController : Controller
         _context = context;
     }
 
-    // GET: Categorias
     public async Task<IActionResult> Index()
     {
-        return View(await _context.Categorias.ToListAsync());
+        var categorias = await _context.Categorias
+            .OrderBy(c => c.Nombre)
+            .ToListAsync();
+
+        return View(categorias);
     }
 
-    // GET: Categorias/Details/5
     public async Task<IActionResult> Details(int? id)
     {
         if (id == null)
-        {
             return NotFound();
-        }
 
         var categoria = await _context.Categorias
-            .FirstOrDefaultAsync(m => m.CategoriaId == id);
+            .FirstOrDefaultAsync(c => c.CategoriaId == id);
 
         if (categoria == null)
-        {
             return NotFound();
-        }
 
         return View(categoria);
     }
 
-    // GET: Categorias/Create
     public IActionResult Create()
     {
         return View();
     }
 
-    // POST: Categorias/Create
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(
-        [Bind("CategoriaId,Nombre,Descripcion,Activo")] Categoria categoria)
+        [Bind("Nombre,Descripcion,Activo")] Categoria categoria)
     {
-        if (ModelState.IsValid)
-        {
-            _context.Add(categoria);
-            await _context.SaveChangesAsync();
+        await ValidarCategoria(categoria);
 
-            return RedirectToAction(nameof(Index));
+        if (!ModelState.IsValid)
+        {
+            var categorias = await _context.Categorias
+                .OrderBy(c => c.Nombre)
+                .ToListAsync();
+
+            ViewData["Nombre"] = categoria.Nombre;
+            ViewData["Descripcion"] = categoria.Descripcion;
+            ViewData["Activo"] = categoria.Activo;
+
+            return View("Index", categorias);
         }
 
-        return View(categoria);
+        _context.Categorias.Add(categoria);
+        await _context.SaveChangesAsync();
+
+        TempData["Mensaje"] = "Categoría registrada correctamente.";
+
+        return RedirectToAction(nameof(Index));
     }
 
-    // GET: Categorias/Edit/5
     public async Task<IActionResult> Edit(int? id)
     {
         if (id == null)
-        {
             return NotFound();
-        }
 
         var categoria = await _context.Categorias.FindAsync(id);
 
         if (categoria == null)
-        {
             return NotFound();
-        }
 
         return View(categoria);
     }
 
-    // POST: Categorias/Edit/5
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(
@@ -86,71 +89,129 @@ public class CategoriasController : Controller
         [Bind("CategoriaId,Nombre,Descripcion,Activo")] Categoria categoria)
     {
         if (id != categoria.CategoriaId)
-        {
             return NotFound();
-        }
 
-        if (ModelState.IsValid)
-        {
-            try
-            {
-                _context.Update(categoria);
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!CategoriaExists(categoria.CategoriaId))
-                {
-                    return NotFound();
-                }
+        var categoriaActual = await _context.Categorias.FindAsync(id);
 
-                throw;
-            }
+        if (categoriaActual == null)
+            return NotFound();
 
-            return RedirectToAction(nameof(Index));
-        }
+        await ValidarCategoria(categoria, id);
 
-        return View(categoria);
+        if (!ModelState.IsValid)
+            return View(categoria);
+
+        categoriaActual.Nombre = categoria.Nombre;
+        categoriaActual.Descripcion = categoria.Descripcion;
+        categoriaActual.Activo = categoria.Activo;
+
+        await _context.SaveChangesAsync();
+
+        TempData["Mensaje"] = "Categoría actualizada correctamente.";
+
+        return RedirectToAction(nameof(Index));
     }
 
-    // GET: Categorias/Delete/5
     public async Task<IActionResult> Delete(int? id)
     {
         if (id == null)
-        {
             return NotFound();
-        }
 
         var categoria = await _context.Categorias
-            .FirstOrDefaultAsync(m => m.CategoriaId == id);
+            .FirstOrDefaultAsync(c => c.CategoriaId == id);
 
         if (categoria == null)
-        {
             return NotFound();
-        }
 
         return View(categoria);
     }
 
-    // POST: Categorias/Delete/5
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
         var categoria = await _context.Categorias.FindAsync(id);
 
-        if (categoria != null)
+        if (categoria == null)
+            return NotFound();
+
+        bool tieneProductos = await _context.Productos
+            .AnyAsync(p => p.CategoriaId == id);
+
+        if (tieneProductos)
         {
-            _context.Categorias.Remove(categoria);
+            TempData["Error"] =
+                "No se puede eliminar la categoría porque tiene productos asociados.";
+
+            return RedirectToAction(nameof(Index));
         }
 
-        await _context.SaveChangesAsync();
+        try
+        {
+            _context.Categorias.Remove(categoria);
+            await _context.SaveChangesAsync();
+
+            TempData["Mensaje"] = "Categoría eliminada correctamente.";
+        }
+        catch (DbUpdateException)
+        {
+            _context.Entry(categoria).State = EntityState.Detached;
+
+            TempData["Error"] =
+                "No se puede eliminar la categoría porque tiene registros relacionados.";
+        }
 
         return RedirectToAction(nameof(Index));
     }
 
-    private bool CategoriaExists(int id)
+    private async Task ValidarCategoria(Categoria categoria, int? id = null)
     {
-        return _context.Categorias.Any(e => e.CategoriaId == id);
+        categoria.Nombre = categoria.Nombre?.Trim() ?? string.Empty;
+        categoria.Descripcion = categoria.Descripcion?.Trim() ?? string.Empty;
+
+        ModelState.Remove(nameof(Categoria.Nombre));
+        ModelState.Remove(nameof(Categoria.Descripcion));
+
+        if (string.IsNullOrWhiteSpace(categoria.Nombre))
+        {
+            ModelState.AddModelError(
+                nameof(Categoria.Nombre),
+                "El nombre de la categoría es obligatorio.");
+        }
+        else if (categoria.Nombre.Length < 3 ||
+                 categoria.Nombre.Length > 100)
+        {
+            ModelState.AddModelError(
+                nameof(Categoria.Nombre),
+                "El nombre debe tener entre 3 y 100 caracteres.");
+        }
+        else if (!categoria.Nombre.Any(char.IsLetter))
+        {
+            ModelState.AddModelError(
+                nameof(Categoria.Nombre),
+                "El nombre debe contener al menos una letra.");
+        }
+
+        if (categoria.Descripcion.Length > 500)
+        {
+            ModelState.AddModelError(
+                nameof(Categoria.Descripcion),
+                "La descripción no puede superar los 500 caracteres.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(categoria.Nombre))
+        {
+            bool existe = await _context.Categorias
+                .AnyAsync(c =>
+                    c.Nombre.ToLower() == categoria.Nombre.ToLower() &&
+                    (!id.HasValue || c.CategoriaId != id.Value));
+
+            if (existe)
+            {
+                ModelState.AddModelError(
+                    nameof(Categoria.Nombre),
+                    "Ya existe una categoría con ese nombre.");
+            }
+        }
     }
 }

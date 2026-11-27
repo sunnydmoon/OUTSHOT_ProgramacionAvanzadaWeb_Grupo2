@@ -1,46 +1,121 @@
 @model Outshot.Models.Categoria
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Editar categoría";
 }
 
-<h1>Edit</h1>
-
-<h4>Categoria</h4>
-<hr />
-
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-            <input type="hidden" asp-for="CategoriaId" />
-
-            <div class="form-group">
-                <label asp-for="Nombre" class="control-label"></label>
-                <input asp-for="Nombre" class="form-control" />
-                <span asp-validation-for="Nombre" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Descripcion" class="control-label"></label>
-                <input asp-for="Descripcion" class="form-control" />
-                <span asp-validation-for="Descripcion" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Activo" class="control-label"></label>
-                <input asp-for="Activo" class="form-check-input" />
-                <span asp-validation-for="Activo" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
-    </div>
+<div class="page-header">
+    <h1 class="page-title">Editar categoría</h1>
+    <p class="page-subtitle">
+        Modificá la información de la categoría registrada en OUTSHOT.
+    </p>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
+<div class="module-layout">
+    <section class="outshot-panel outshot-panel-form">
+        <div class="panel-header">
+            <h2>Información de la categoría</h2>
+            <p>Actualizá los datos que necesitás modificar.</p>
+        </div>
+
+        <div class="panel-body">
+            <form asp-action="Edit"
+                  asp-route-id="@Model.CategoriaId"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" asp-for="CategoriaId" />
+
+                <div asp-validation-summary="ModelOnly"
+                     class="text-danger mb-3"></div>
+
+                <div class="form-group">
+                    <label asp-for="Nombre">Nombre</label>
+                    <input asp-for="Nombre"
+                           class="form-control"
+                           minlength="3"
+                           maxlength="100"
+                           required />
+                    <span asp-validation-for="Nombre"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Descripcion">Descripción</label>
+                    <textarea asp-for="Descripcion"
+                              class="form-control"
+                              rows="3"
+                              maxlength="500"
+                              placeholder="Descripción de la categoría"></textarea>
+                    <span asp-validation-for="Descripcion"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-check">
+                        <input asp-for="Activo"
+                               class="form-check-input" />
+                        <label asp-for="Activo"
+                               class="form-check-label">
+                            Categoría activa
+                        </label>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-3 mt-3">
+                    <button type="submit" class="outshot-btn">
+                        Guardar cambios
+                    </button>
+
+                    <a asp-action="Index">
+                        Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="outshot-panel">
+        <div class="panel-header">
+            <h2>Editar categoría</h2>
+            <p>Información de la categoría seleccionada.</p>
+        </div>
+
+        <div class="panel-body">
+            <p>
+                <strong>Categoría:</strong>
+                @Model.Nombre
+            </p>
+
+            <p>
+                <strong>Descripción:</strong>
+                @(string.IsNullOrWhiteSpace(Model.Descripcion)
+                    ? "Sin descripción"
+                    : Model.Descripcion)
+            </p>
+
+            <p>
+                <strong>Estado:</strong>
+                @if (Model.Activo)
+                {
+                    <span class="status-active">Activa</span>
+                }
+                else
+                {
+                    <span class="status-inactive">Inactiva</span>
+                }
+            </p>
+
+            <p class="text-muted">
+                Los cambios se guardarán cuando presionés Guardar cambios.
+            </p>
+        </div>
+    </section>
 </div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
