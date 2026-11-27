@@ -1,0 +1,187 @@
+﻿@model IEnumerable<Outshot.Models.MovimientoInventario>
+
+@{
+    ViewData["Title"] = "Movimientos de inventario";
+
+    string? tipo = ViewData["Tipo"] as string;
+    var productos = ViewData["ProductoId"] as SelectList;
+
+    var tipos = new SelectList(
+        new[]
+        {
+            new { Valor = "Entrada", Texto = "Entradas" },
+            new { Valor = "Salida", Texto = "Salidas" }
+        },
+        "Valor",
+        "Texto",
+        tipo);
+
+    int totalEntradas = Model
+        .Where(m => m.Tipo == "Entrada")
+        .Sum(m => m.Cantidad);
+
+    int totalSalidas = Model
+        .Where(m => m.Tipo == "Salida")
+        .Sum(m => m.Cantidad);
+}
+
+<div class="page-header">
+    <h1 class="page-title">Movimientos de inventario</h1>
+    <p class="page-subtitle">
+        Historial de entradas y salidas, manuales y generadas por pedidos.
+    </p>
+</div>
+
+<div class="outshot-panel mb-4">
+
+    <div class="panel-body">
+
+        <form asp-action="Movimientos" method="get" class="inventario-filtros">
+
+            <select name="productoId"
+                    class="form-select"
+                    asp-items="productos">
+                <option value="">Todos los productos</option>
+            </select>
+
+            <select name="tipo"
+                    class="form-select"
+                    asp-items="tipos">
+                <option value="">Todos los tipos</option>
+            </select>
+
+            <input type="date"
+                   name="desde"
+                   value="@ViewData["Desde"]"
+                   class="form-control"
+                   title="Desde" />
+
+            <input type="date"
+                   name="hasta"
+                   value="@ViewData["Hasta"]"
+                   class="form-control"
+                   title="Hasta" />
+
+            <button type="submit" class="btn btn-dark">
+                Filtrar
+            </button>
+
+            <a asp-action="Movimientos" class="btn btn-secondary">
+                Limpiar
+            </a>
+
+        </form>
+
+    </div>
+
+</div>
+
+<div class="kpi-grid kpi-grid-3 mb-4">
+
+    <div class="kpi-card">
+        <span class="kpi-label">Movimientos</span>
+        <strong class="kpi-value">@Model.Count()</strong>
+        <span class="kpi-note">según los filtros (máx. 500)</span>
+    </div>
+
+    <div class="kpi-card">
+        <span class="kpi-label">Unidades que entraron</span>
+        <strong class="kpi-value text-success">+@totalEntradas</strong>
+        <span class="kpi-note">entradas</span>
+    </div>
+
+    <div class="kpi-card">
+        <span class="kpi-label">Unidades que salieron</span>
+        <strong class="kpi-value text-danger">-@totalSalidas</strong>
+        <span class="kpi-note">salidas</span>
+    </div>
+
+</div>
+
+<div class="outshot-panel">
+
+    <div class="panel-header">
+        <h2>Listado de movimientos</h2>
+        <p>Del más reciente al más antiguo.</p>
+    </div>
+
+    <div class="panel-body">
+
+        <div class="mb-3">
+            <a asp-action="Index" class="btn btn-secondary">
+                Volver al inventario
+            </a>
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table">
+
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Producto</th>
+                        <th>Tipo</th>
+                        <th>Cantidad</th>
+                        <th>Observación</th>
+                        <th>Usuario</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @if (Model.Any())
+                    {
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+
+                                <td>
+                                    <a asp-action="Details"
+                                       asp-route-id="@item.InventarioId">
+                                        @item.Inventario.Producto.Nombre
+                                    </a>
+                                </td>
+
+                                <td>
+                                    @if (item.Tipo == "Entrada")
+                                    {
+                                        <span class="status-active">Entrada</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-inactive">Salida</span>
+                                    }
+                                </td>
+
+                                <td>
+                                    <strong>
+                                        @(item.Tipo == "Entrada" ? "+" : "-")@item.Cantidad
+                                    </strong>
+                                </td>
+
+                                <td>@item.Observacion</td>
+
+                                <td>@item.Usuario.Nombre</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                No hay movimientos que coincidan con los filtros.
+                            </td>
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>

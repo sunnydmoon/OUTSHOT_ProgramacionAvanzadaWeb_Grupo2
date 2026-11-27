@@ -1,0 +1,165 @@
+﻿@model Outshot.Models.Inventario
+
+@{
+    ViewData["Title"] = "Detalle de inventario";
+
+    var movimientos = Model.MovimientosInventario
+        .OrderByDescending(m => m.Fecha)
+        .ToList();
+}
+
+<div class="page-header">
+    <h1 class="page-title">@Model.Producto.Nombre</h1>
+    <p class="page-subtitle">
+        Detalle del inventario y su historial de movimientos.
+    </p>
+</div>
+
+@if (TempData["Mensaje"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Mensaje"]
+    </div>
+}
+
+<div class="kpi-grid kpi-grid-3 mb-4">
+
+    <div class="kpi-card">
+        <span class="kpi-label">Existencias</span>
+        <strong class="kpi-value">@Model.Existencias</strong>
+        <span class="kpi-note">unidades disponibles</span>
+    </div>
+
+    <div class="kpi-card">
+        <span class="kpi-label">Stock mínimo</span>
+        <strong class="kpi-value">@Model.StockMinimo</strong>
+        <span class="kpi-note">nivel de alerta</span>
+    </div>
+
+    <div class="kpi-card">
+        <span class="kpi-label">Estado</span>
+        <strong class="kpi-value kpi-value-sm">
+            @if (Model.Existencias == 0)
+            {
+                <span class="status-inactive">Agotado</span>
+            }
+            else if (Model.Existencias <= Model.StockMinimo)
+            {
+                <span class="status-warning">Stock bajo</span>
+            }
+            else
+            {
+                <span class="status-active">Disponible</span>
+            }
+        </strong>
+        <span class="kpi-note">
+            Actualizado el @Model.UltimaActualizacion.ToString("dd/MM/yyyy HH:mm")
+        </span>
+    </div>
+
+</div>
+
+<div class="mb-4">
+
+    <a asp-action="Movimiento"
+       asp-route-id="@Model.InventarioId"
+       asp-route-tipo="Entrada"
+       class="outshot-btn">
+        Registrar entrada
+    </a>
+
+    <a asp-action="Movimiento"
+       asp-route-id="@Model.InventarioId"
+       asp-route-tipo="Salida"
+       class="btn btn-outline-dark">
+        Registrar salida
+    </a>
+
+    <a asp-action="Edit"
+       asp-route-id="@Model.InventarioId"
+       class="btn btn-outline-dark">
+        Editar stock mínimo
+    </a>
+
+    <a asp-action="Index" class="btn btn-secondary">
+        Volver al listado
+    </a>
+
+</div>
+
+<div class="outshot-panel">
+
+    <div class="panel-header">
+        <h2>Historial de movimientos</h2>
+        <p>
+            Categoría: @(Model.Producto.Categoria?.Nombre ?? "Sin categoría") ·
+            Precio: ₡@Model.Producto.Precio.ToString("N2")
+        </p>
+    </div>
+
+    <div class="panel-body">
+
+        <div class="table-responsive">
+
+            <table class="table">
+
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th>Cantidad</th>
+                        <th>Observación</th>
+                        <th>Usuario</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @if (movimientos.Any())
+                    {
+                        @foreach (var movimiento in movimientos)
+                        {
+                            <tr>
+                                <td>@movimiento.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+
+                                <td>
+                                    @if (movimiento.Tipo == "Entrada")
+                                    {
+                                        <span class="status-active">Entrada</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-inactive">Salida</span>
+                                    }
+                                </td>
+
+                                <td>
+                                    <strong>
+                                        @(movimiento.Tipo == "Entrada" ? "+" : "-")@movimiento.Cantidad
+                                    </strong>
+                                </td>
+
+                                <td>@movimiento.Observacion</td>
+
+                                <td>@movimiento.Usuario.Nombre</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                Este inventario todavía no tiene movimientos.
+                            </td>
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>

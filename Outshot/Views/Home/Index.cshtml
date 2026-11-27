@@ -50,4 +50,39 @@
         </p>
     </a>
 
+    @if (User.IsInRole("Administrador"))
+    {
+        <a asp-controller="Inventarios"
+           asp-action="Index"
+           class="module-card">
+
+            <div class="module-card-icon">
+                ▦
+            </div>
+
+            <h3>Inventario</h3>
+
+            <p>
+                Controlá existencias, stock mínimo y movimientos
+                de entrada y salida.
+            </p>
+        </a>
+
+        <a asp-controller="Reportes"
+           asp-action="Dashboard"
+           class="module-card">
+
+            <div class="module-card-icon">
+                ◔
+            </div>
+
+            <h3>Reportes</h3>
+
+            <p>
+                Consultá los indicadores de ventas e inventario
+                de la tienda.
+            </p>
+        </a>
+    }
+
 </div>

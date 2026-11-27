@@ -1,0 +1,92 @@
+﻿@model Outshot.ViewModels.InventarioFormViewModel
+
+@{
+    ViewData["Title"] = "Editar inventario";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Editar inventario</h1>
+    <p class="page-subtitle">
+        Actualizá el stock mínimo de @Model.NombreProducto.
+    </p>
+</div>
+
+<div class="module-layout">
+
+    <section class="outshot-panel outshot-panel-form">
+
+        <div class="panel-header">
+            <h2>@Model.NombreProducto</h2>
+            <p>
+                Las existencias no se editan aquí. Para cambiarlas,
+                registrá una entrada o una salida.
+            </p>
+        </div>
+
+        <div class="panel-body">
+
+            <form asp-action="Edit" method="post">
+
+                <div asp-validation-summary="ModelOnly"
+                     class="text-danger">
+                </div>
+
+                <input type="hidden" asp-for="InventarioId" />
+                <input type="hidden" asp-for="ProductoId" />
+                <input type="hidden" asp-for="Existencias" />
+
+                <div class="form-group">
+                    <label class="control-label">Existencias actuales</label>
+
+                    <input type="text"
+                           class="form-control"
+                           value="@Model.Existencias"
+                           readonly />
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="StockMinimo" class="control-label">
+                        Stock mínimo
+                    </label>
+
+                    <input asp-for="StockMinimo"
+                           type="number"
+                           min="0"
+                           class="form-control" />
+
+                    <span asp-validation-for="StockMinimo"
+                          class="text-danger">
+                    </span>
+                </div>
+
+                <div class="form-group mt-3">
+
+                    <button type="submit" class="outshot-btn">
+                        Guardar cambios
+                    </button>
+
+                    <a asp-action="Movimiento"
+                       asp-route-id="@Model.InventarioId"
+                       class="btn btn-outline-dark">
+                        Registrar movimiento
+                    </a>
+
+                    <a asp-action="Index" class="btn btn-secondary">
+                        Volver al listado
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </section>
+
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

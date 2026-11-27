@@ -47,6 +47,21 @@
                                 <span>Categorías</span>
                             </a>
                         </li>
+                        <li>
+                            <a asp-controller="Inventarios"
+                               asp-action="Index">
+                                <span class="outshot-menu-icon">▦</span>
+                                <span>Inventario</span>
+                            </a>
+                        </li>
+
+                        <li>
+                            <a asp-controller="Reportes"
+                               asp-action="Dashboard">
+                                <span class="outshot-menu-icon">◔</span>
+                                <span>Reportes</span>
+                            </a>
+                        </li>
                     }
 
                     <li>
@@ -56,6 +71,7 @@
                             <span>Productos</span>
                         </a>
                     </li>
+
 
                     @if (User.Identity!.IsAuthenticated)
                     {
