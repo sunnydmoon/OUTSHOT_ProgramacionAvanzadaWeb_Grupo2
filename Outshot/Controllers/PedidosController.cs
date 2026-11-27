@@ -98,6 +98,11 @@ public class PedidosController : Controller
             pedido.ClienteId = cliente.ClienteId;
             pedido.Estado = "Pendiente";
         }
+        // Las propiedades de navegación no vienen en el formulario,
+        // solo los Id. Se quitan para que no invaliden el modelo.
+        ModelState.Remove(nameof(Pedido.Cliente));
+        ModelState.Remove(nameof(Pedido.Usuario));
+        ModelState.Remove(nameof(Pedido.Estado));
 
         if (ModelState.IsValid)
         {
@@ -475,6 +480,11 @@ public class PedidosController : Controller
         if (id != pedido.PedidoId)
             return NotFound();
 
+        // Las propiedades de navegación no vienen en el formulario,
+        // solo los Id. Se quitan para que no invaliden el modelo.
+        ModelState.Remove(nameof(Pedido.Cliente));
+        ModelState.Remove(nameof(Pedido.Usuario));
+
         if (ModelState.IsValid)
         {
             var pedidoExistente = await _context.Pedidos.FindAsync(id);
@@ -644,13 +654,33 @@ public class PedidosController : Controller
         );
     }
 
-    // Cargar productos activos.
+    // Cargar productos activos con existencias, agrupados por categoría.
     private void CargarProductos()
     {
+        var productos = _context.Productos
+            .Include(p => p.Categoria)
+            .Include(p => p.Inventario)
+            .Where(p =>
+                p.Activo &&
+                p.Inventario != null &&
+                p.Inventario.Existencias > 0)
+            .OrderBy(p => p.Categoria!.Nombre)
+            .ThenBy(p => p.Nombre)
+            .ToList()
+            .Select(p => new
+            {
+                p.ProductoId,
+                Texto = $"{p.Nombre} — ₡{p.Precio:N2} (disponibles: {p.Inventario!.Existencias})",
+                Categoria = p.Categoria?.Nombre ?? "Sin categoría"
+            })
+            .ToList();
+
         ViewData["ProductoId"] = new SelectList(
-            _context.Productos.Where(p => p.Activo),
+            productos,
             "ProductoId",
-            "Nombre"
+            "Texto",
+            null,
+            "Categoria"
         );
     }
 }
