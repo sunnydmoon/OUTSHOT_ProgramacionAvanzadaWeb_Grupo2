@@ -1,0 +1,206 @@
+﻿@model IEnumerable<Outshot.Models.Inventario>
+
+@{
+    ViewData["Title"] = "Inventario";
+
+    string? buscar = ViewData["Buscar"] as string;
+    string? estado = ViewData["Estado"] as string;
+    int productosSinInventario = (int)(ViewData["ProductosSinInventario"] ?? 0);
+
+    var estados = new SelectList(
+        new[]
+        {
+            new { Valor = "disponible", Texto = "Disponible" },
+            new { Valor = "bajo", Texto = "Stock bajo" },
+            new { Valor = "agotado", Texto = "Agotado" }
+        },
+        "Valor",
+        "Texto",
+        estado);
+}
+
+<div class="page-header">
+    <h1 class="page-title">Inventario</h1>
+    <p class="page-subtitle">
+        Controlá las existencias y el stock mínimo de los productos de OUTSHOT.
+    </p>
+</div>
+
+@if (TempData["Mensaje"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Mensaje"]
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
+}
+
+@if (productosSinInventario > 0)
+{
+    <div class="alert alert-warning">
+        Hay <strong>@productosSinInventario</strong> producto(s) sin inventario registrado.
+        No se pueden agregar a pedidos hasta que tengan inventario.
+    </div>
+}
+
+<div class="outshot-panel">
+
+    <div class="panel-header">
+        <h2>Existencias por producto</h2>
+        <p>Registrá entradas y salidas para mantener el stock actualizado.</p>
+    </div>
+
+    <div class="panel-body">
+
+        <div class="inventario-toolbar">
+
+            <div class="inventario-toolbar-actions">
+                <a asp-action="Create" class="outshot-btn">
+                    Nuevo inventario
+                </a>
+
+                <a asp-action="Movimientos" class="btn btn-outline-dark">
+                    Ver movimientos
+                </a>
+            </div>
+
+            <form asp-action="Index" method="get" class="inventario-filtros">
+
+                <input type="text"
+                       name="buscar"
+                       value="@buscar"
+                       class="form-control"
+                       placeholder="Buscar producto..." />
+
+                <select name="estado"
+                        class="form-select"
+                        asp-items="estados">
+                    <option value="">Todos los estados</option>
+                </select>
+
+                <button type="submit" class="btn btn-dark">
+                    Filtrar
+                </button>
+
+                <a asp-action="Index" class="btn btn-secondary">
+                    Limpiar
+                </a>
+
+            </form>
+
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table">
+
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Categoría</th>
+                        <th>Existencias</th>
+                        <th>Stock mínimo</th>
+                        <th>Estado</th>
+                        <th>Última actualización</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @if (Model.Any())
+                    {
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@item.Producto.Nombre</strong>
+                                </td>
+
+                                <td>
+                                    @(item.Producto.Categoria?.Nombre ?? "Sin categoría")
+                                </td>
+
+                                <td>
+                                    <strong>@item.Existencias</strong>
+                                </td>
+
+                                <td>@item.StockMinimo</td>
+
+                                <td>
+                                    @if (item.Existencias == 0)
+                                    {
+                                        <span class="status-inactive">Agotado</span>
+                                    }
+                                    else if (item.Existencias <= item.StockMinimo)
+                                    {
+                                        <span class="status-warning">Stock bajo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-active">Disponible</span>
+                                    }
+                                </td>
+
+                                <td>
+                                    @item.UltimaActualizacion.ToString("dd/MM/yyyy HH:mm")
+                                </td>
+
+                                <td>
+                                    <div class="table-actions">
+
+                                        <a asp-action="Movimiento"
+                                           asp-route-id="@item.InventarioId"
+                                           asp-route-tipo="Entrada">
+                                            Entrada
+                                        </a>
+
+                                        <a asp-action="Movimiento"
+                                           asp-route-id="@item.InventarioId"
+                                           asp-route-tipo="Salida">
+                                            Salida
+                                        </a>
+
+                                        <a asp-action="Details"
+                                           asp-route-id="@item.InventarioId">
+                                            Ver
+                                        </a>
+
+                                        <a asp-action="Edit"
+                                           asp-route-id="@item.InventarioId">
+                                            Editar
+                                        </a>
+
+                                        <a asp-action="Delete"
+                                           asp-route-id="@item.InventarioId">
+                                            Eliminar
+                                        </a>
+
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                No hay inventarios que coincidan con la búsqueda.
+                            </td>
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>

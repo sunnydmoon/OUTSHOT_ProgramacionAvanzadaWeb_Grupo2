@@ -1,0 +1,125 @@
+﻿@model Outshot.ViewModels.InventarioFormViewModel
+
+@{
+    ViewData["Title"] = "Nuevo inventario";
+
+    var productos = ViewData["ProductoId"] as SelectList;
+    bool hayProductos = productos != null && productos.Any();
+}
+
+<div class="page-header">
+    <h1 class="page-title">Nuevo inventario</h1>
+    <p class="page-subtitle">
+        Registrá las existencias iniciales y el stock mínimo de un producto.
+    </p>
+</div>
+
+<div class="module-layout">
+
+    <section class="outshot-panel outshot-panel-form">
+
+        <div class="panel-header">
+            <h2>Información del inventario</h2>
+            <p>Solo aparecen los productos que todavía no tienen inventario.</p>
+        </div>
+
+        <div class="panel-body">
+
+            @if (!hayProductos)
+            {
+                <div class="alert alert-info">
+                    Todos los productos ya tienen inventario registrado.
+                </div>
+
+                <a asp-action="Index" class="btn btn-secondary">
+                    Volver al listado
+                </a>
+            }
+            else
+            {
+                <form asp-action="Create" method="post">
+
+                    <div asp-validation-summary="ModelOnly"
+                         class="text-danger">
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="ProductoId" class="control-label">
+                            Producto
+                        </label>
+
+                        <select asp-for="ProductoId"
+                                class="form-select"
+                                asp-items="productos">
+                            <option value="0">-- Seleccioná un producto --</option>
+                        </select>
+
+                        <span asp-validation-for="ProductoId"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Existencias" class="control-label">
+                            Existencias iniciales
+                        </label>
+
+                        <input asp-for="Existencias"
+                               type="number"
+                               min="0"
+                               class="form-control" />
+
+                        <small class="text-muted">
+                            Si es mayor que 0, se registra como una entrada de "Inventario inicial".
+                        </small>
+
+                        <span asp-validation-for="Existencias"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="StockMinimo" class="control-label">
+                            Stock mínimo
+                        </label>
+
+                        <input asp-for="StockMinimo"
+                               type="number"
+                               min="0"
+                               class="form-control" />
+
+                        <small class="text-muted">
+                            Cuando las existencias lleguen a este número, el producto aparecerá con stock bajo.
+                        </small>
+
+                        <span asp-validation-for="StockMinimo"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="form-group mt-3">
+
+                        <button type="submit" class="outshot-btn">
+                            Guardar inventario
+                        </button>
+
+                        <a asp-action="Index" class="btn btn-secondary">
+                            Volver al listado
+                        </a>
+
+                    </div>
+
+                </form>
+            }
+
+        </div>
+
+    </section>
+
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

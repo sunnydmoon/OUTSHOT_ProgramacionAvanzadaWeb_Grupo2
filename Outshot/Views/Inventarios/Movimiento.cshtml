@@ -1,0 +1,107 @@
+﻿@model Outshot.ViewModels.MovimientoInventarioViewModel
+
+@{
+    ViewData["Title"] = "Registrar movimiento";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Registrar movimiento</h1>
+    <p class="page-subtitle">
+        Registrá una entrada o salida manual de @Model.NombreProducto.
+    </p>
+</div>
+
+<div class="module-layout">
+
+    <section class="outshot-panel outshot-panel-form">
+
+        <div class="panel-header">
+            <h2>@Model.NombreProducto</h2>
+            <p>
+                Existencias actuales: <strong>@Model.ExistenciasActuales</strong> ·
+                Stock mínimo: <strong>@Model.StockMinimo</strong>
+            </p>
+        </div>
+
+        <div class="panel-body">
+
+            <form asp-action="Movimiento" method="post">
+
+                <div asp-validation-summary="ModelOnly"
+                     class="text-danger">
+                </div>
+
+                <input type="hidden" asp-for="InventarioId" />
+
+                <div class="form-group">
+                    <label asp-for="Tipo" class="control-label">
+                        Tipo de movimiento
+                    </label>
+
+                    <select asp-for="Tipo" class="form-select">
+                        <option value="Entrada">Entrada (aumenta existencias)</option>
+                        <option value="Salida">Salida (disminuye existencias)</option>
+                    </select>
+
+                    <span asp-validation-for="Tipo"
+                          class="text-danger">
+                    </span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Cantidad" class="control-label">
+                        Cantidad
+                    </label>
+
+                    <input asp-for="Cantidad"
+                           type="number"
+                           min="1"
+                           class="form-control" />
+
+                    <span asp-validation-for="Cantidad"
+                          class="text-danger">
+                    </span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Observacion" class="control-label">
+                        Observación
+                    </label>
+
+                    <textarea asp-for="Observacion"
+                              class="form-control"
+                              rows="3"
+                              placeholder="Ej. Compra a proveedor, prenda dañada, conteo físico..."></textarea>
+
+                    <span asp-validation-for="Observacion"
+                          class="text-danger">
+                    </span>
+                </div>
+
+                <div class="form-group mt-3">
+
+                    <button type="submit" class="outshot-btn">
+                        Registrar movimiento
+                    </button>
+
+                    <a asp-action="Details"
+                       asp-route-id="@Model.InventarioId"
+                       class="btn btn-secondary">
+                        Cancelar
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </section>
+
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

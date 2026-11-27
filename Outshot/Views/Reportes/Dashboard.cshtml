@@ -1,0 +1,359 @@
+﻿@model Outshot.ViewModels.DashboardViewModel
+
+@{
+    ViewData["Title"] = "Dashboard";
+
+    decimal maxVentaMes = Model.VentasPorMes.Any()
+        ? Model.VentasPorMes.Max(v => v.Total)
+        : 0;
+
+    int maxMovimiento = Math.Max(
+        Model.EntradasUltimos30Dias,
+        Model.SalidasUltimos30Dias);
+
+    int maxVendido = Model.ProductosMasVendidos.Any()
+        ? Model.ProductosMasVendidos.Max(p => p.Cantidad)
+        : 0;
+
+    // Porcentaje entero para el ancho/alto de las barras.
+    int Porcentaje(decimal valor, decimal maximo) =>
+        maximo <= 0 ? 0 : (int)Math.Round(valor * 100 / maximo);
+}
+
+<div class="page-header">
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-subtitle">
+        Indicadores de inventario y ventas de OUTSHOT, actualizados desde la base de datos.
+    </p>
+</div>
+
+<!-- Indicadores principales -->
+<div class="kpi-grid mb-4">
+
+    <div class="kpi-card">
+        <span class="kpi-label">Ventas confirmadas</span>
+        <strong class="kpi-value">₡@Model.VentasConfirmadas.ToString("N2")</strong>
+        <span class="kpi-note">@Model.PedidosConfirmados pedido(s) confirmados</span>
+    </div>
+
+    <div class="kpi-card">
+        <span class="kpi-label">Valor del inventario</span>
+        <strong class="kpi-value">₡@Model.ValorInventario.ToString("N2")</strong>
+        <span class="kpi-note">@Model.UnidadesEnInventario unidades en bodega</span>
+    </div>
+
+    <div class="kpi-card">
+        <span class="kpi-label">Pedidos pendientes</span>
+        <strong class="kpi-value">@Model.PedidosPendientes</strong>
+        <span class="kpi-note">por confirmar</span>
+    </div>
+
+    <div class="kpi-card">
+        <span class="kpi-label">Clientes registrados</span>
+        <strong class="kpi-value">@Model.ClientesRegistrados</strong>
+        <span class="kpi-note">en total</span>
+    </div>
+
+</div>
+
+<!-- Estado del inventario -->
+<div class="kpi-grid mb-4">
+
+    <div class="kpi-card">
+        <span class="kpi-label">Productos activos</span>
+        <strong class="kpi-value">@Model.ProductosActivos</strong>
+        <span class="kpi-note">@Model.ProductosConInventario con inventario</span>
+    </div>
+
+    <a asp-controller="Inventarios"
+       asp-action="Index"
+       asp-route-estado="bajo"
+       class="kpi-card kpi-card-link kpi-card-warning">
+        <span class="kpi-label">Stock bajo</span>
+        <strong class="kpi-value">@Model.ProductosBajoStock</strong>
+        <span class="kpi-note">en o bajo el stock mínimo</span>
+    </a>
+
+    <a asp-controller="Inventarios"
+       asp-action="Index"
+       asp-route-estado="agotado"
+       class="kpi-card kpi-card-link kpi-card-danger">
+        <span class="kpi-label">Agotados</span>
+        <strong class="kpi-value">@Model.ProductosAgotados</strong>
+        <span class="kpi-note">con 0 existencias</span>
+    </a>
+
+    <div class="kpi-card">
+        <span class="kpi-label">Sin inventario</span>
+        <strong class="kpi-value">@Model.ProductosSinInventario</strong>
+        <span class="kpi-note">productos sin registrar</span>
+    </div>
+
+</div>
+
+<div class="dashboard-grid mb-4">
+
+    <!-- Ventas por mes -->
+    <section class="outshot-panel">
+
+        <div class="panel-header">
+            <h2>Ventas de los últimos 6 meses</h2>
+            <p>Total de pedidos confirmados por mes.</p>
+        </div>
+
+        <div class="panel-body">
+
+            <div class="bar-chart">
+
+                @foreach (var mes in Model.VentasPorMes)
+                {
+                    int alto = Porcentaje(mes.Total, maxVentaMes);
+
+                    <div class="bar-chart-item"
+                         title="@mes.Mes: ₡@mes.Total.ToString("N2") (@mes.Pedidos pedidos)">
+
+                        <span class="bar-chart-value">
+                            @(mes.Total > 0 ? "₡" + mes.Total.ToString("N0") : "-")
+                        </span>
+
+                        <div class="bar-chart-track">
+                            <div class="bar-chart-bar" style="height: @(alto)%"></div>
+                        </div>
+
+                        <span class="bar-chart-label">@mes.Mes</span>
+                    </div>
+                }
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- Movimientos de los últimos 30 días -->
+    <section class="outshot-panel">
+
+        <div class="panel-header">
+            <h2>Movimientos (30 días)</h2>
+            <p>Unidades que entraron y salieron del inventario.</p>
+        </div>
+
+        <div class="panel-body">
+
+            <div class="hbar">
+                <div class="hbar-header">
+                    <span>Entradas</span>
+                    <strong class="text-success">+@Model.EntradasUltimos30Dias</strong>
+                </div>
+                <div class="hbar-track">
+                    <div class="hbar-fill hbar-fill-success"
+                         style="width: @(Porcentaje(Model.EntradasUltimos30Dias, maxMovimiento))%">
+                    </div>
+                </div>
+            </div>
+
+            <div class="hbar">
+                <div class="hbar-header">
+                    <span>Salidas</span>
+                    <strong class="text-danger">-@Model.SalidasUltimos30Dias</strong>
+                </div>
+                <div class="hbar-track">
+                    <div class="hbar-fill hbar-fill-danger"
+                         style="width: @(Porcentaje(Model.SalidasUltimos30Dias, maxMovimiento))%">
+                    </div>
+                </div>
+            </div>
+
+            <a asp-controller="Inventarios"
+               asp-action="Movimientos"
+               class="btn btn-outline-dark btn-sm mt-2">
+                Ver todos los movimientos
+            </a>
+
+        </div>
+
+    </section>
+
+</div>
+
+<div class="dashboard-grid mb-4">
+
+    <!-- Productos más vendidos -->
+    <section class="outshot-panel">
+
+        <div class="panel-header">
+            <h2>Productos más vendidos</h2>
+            <p>Top 5 por unidades en pedidos confirmados.</p>
+        </div>
+
+        <div class="panel-body">
+
+            @if (Model.ProductosMasVendidos.Any())
+            {
+                @foreach (var producto in Model.ProductosMasVendidos)
+                {
+                    <div class="hbar">
+                        <div class="hbar-header">
+                            <span>@producto.Nombre</span>
+                            <strong>
+                                @producto.Cantidad u. · ₡@producto.Total.ToString("N2")
+                            </strong>
+                        </div>
+                        <div class="hbar-track">
+                            <div class="hbar-fill"
+                                 style="width: @(Porcentaje(producto.Cantidad, maxVendido))%">
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <p class="text-muted mb-0">
+                    Todavía no hay pedidos confirmados.
+                </p>
+            }
+
+        </div>
+
+    </section>
+
+    <!-- Alertas de stock -->
+    <section class="outshot-panel">
+
+        <div class="panel-header">
+            <h2>Alertas de stock</h2>
+            <p>Productos agotados o en su stock mínimo.</p>
+        </div>
+
+        <div class="panel-body">
+
+            @if (Model.AlertasStock.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Existencias</th>
+                                <th>Mínimo</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var alerta in Model.AlertasStock)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@alerta.Producto.Nombre</strong>
+                                        <br />
+                                        @if (alerta.Existencias == 0)
+                                        {
+                                            <span class="status-inactive">Agotado</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="status-warning">Stock bajo</span>
+                                        }
+                                    </td>
+                                    <td>@alerta.Existencias</td>
+                                    <td>@alerta.StockMinimo</td>
+                                    <td>
+                                        <a asp-controller="Inventarios"
+                                           asp-action="Movimiento"
+                                           asp-route-id="@alerta.InventarioId"
+                                           asp-route-tipo="Entrada">
+                                            Reabastecer
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted mb-0">
+                    Todos los productos tienen existencias suficientes.
+                </p>
+            }
+
+        </div>
+
+    </section>
+
+</div>
+
+<!-- Últimos movimientos -->
+<section class="outshot-panel">
+
+    <div class="panel-header">
+        <h2>Últimos movimientos</h2>
+        <p>Las 8 entradas o salidas más recientes.</p>
+    </div>
+
+    <div class="panel-body">
+
+        <div class="table-responsive">
+
+            <table class="table">
+
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Producto</th>
+                        <th>Tipo</th>
+                        <th>Cantidad</th>
+                        <th>Observación</th>
+                        <th>Usuario</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @if (Model.UltimosMovimientos.Any())
+                    {
+                        @foreach (var movimiento in Model.UltimosMovimientos)
+                        {
+                            <tr>
+                                <td>@movimiento.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@movimiento.Inventario.Producto.Nombre</td>
+                                <td>
+                                    @if (movimiento.Tipo == "Entrada")
+                                    {
+                                        <span class="status-active">Entrada</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-inactive">Salida</span>
+                                    }
+                                </td>
+                                <td>
+                                    <strong>
+                                        @(movimiento.Tipo == "Entrada" ? "+" : "-")@movimiento.Cantidad
+                                    </strong>
+                                </td>
+                                <td>@movimiento.Observacion</td>
+                                <td>@movimiento.Usuario.Nombre</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                Todavía no hay movimientos registrados.
+                            </td>
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</section>

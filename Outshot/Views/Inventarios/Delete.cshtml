@@ -1,0 +1,73 @@
+﻿@model Outshot.Models.Inventario
+
+@{
+    ViewData["Title"] = "Eliminar inventario";
+
+    string? motivoBloqueo = ViewData["MotivoBloqueo"] as string;
+    int cantidadMovimientos = Model.MovimientosInventario.Count;
+}
+
+<div class="page-header">
+    <h1 class="page-title">Eliminar inventario</h1>
+    <p class="page-subtitle">
+        Revisá la información antes de eliminar el inventario.
+    </p>
+</div>
+
+<div class="outshot-details">
+
+    <dl class="row">
+        <dt class="col-sm-4">Producto</dt>
+        <dd class="col-sm-8">@Model.Producto.Nombre</dd>
+
+        <dt class="col-sm-4">Existencias</dt>
+        <dd class="col-sm-8">@Model.Existencias</dd>
+
+        <dt class="col-sm-4">Stock mínimo</dt>
+        <dd class="col-sm-8">@Model.StockMinimo</dd>
+
+        <dt class="col-sm-4">Movimientos registrados</dt>
+        <dd class="col-sm-8">@cantidadMovimientos</dd>
+
+        <dt class="col-sm-4">Última actualización</dt>
+        <dd class="col-sm-8">@Model.UltimaActualizacion.ToString("dd/MM/yyyy HH:mm")</dd>
+    </dl>
+
+    @if (motivoBloqueo != null)
+    {
+        <div class="alert alert-danger mt-3">
+            @motivoBloqueo
+        </div>
+
+        <a asp-action="Index" class="btn btn-secondary">
+            Volver al listado
+        </a>
+    }
+    else
+    {
+        <div class="alert alert-warning mt-3">
+            ¿Está seguro de que desea eliminar este inventario?
+            @if (cantidadMovimientos > 0)
+            {
+                <span>
+                    También se eliminará el historial de
+                    <strong>@cantidadMovimientos</strong> movimiento(s).
+                </span>
+            }
+            El producto no se podrá agregar a pedidos hasta que tenga un inventario nuevo.
+        </div>
+
+        <form asp-action="Delete" method="post">
+            <input type="hidden" asp-for="InventarioId" />
+
+            <button type="submit" class="btn btn-danger">
+                Eliminar
+            </button>
+
+            <a asp-action="Index" class="btn btn-secondary">
+                Cancelar
+            </a>
+        </form>
+    }
+
+</div>
