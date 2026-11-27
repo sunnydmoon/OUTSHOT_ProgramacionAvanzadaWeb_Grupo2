@@ -17,7 +17,7 @@ namespace Outshot.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.0")
+                .HasAnnotation("ProductVersion", "10.0.15")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -69,11 +69,22 @@ namespace Outshot.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Pais")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Telefono")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("UsuarioId")
+                        .HasColumnType("int");
+
                     b.HasKey("ClienteId");
+
+                    b.HasIndex("UsuarioId")
+                        .IsUnique()
+                        .HasFilter("[UsuarioId] IS NOT NULL");
 
                     b.ToTable("Clientes");
                 });
@@ -283,6 +294,15 @@ namespace Outshot.Migrations
                     b.ToTable("Usuarios");
                 });
 
+            modelBuilder.Entity("Outshot.Models.Cliente", b =>
+                {
+                    b.HasOne("Outshot.Models.Usuario", "Usuario")
+                        .WithOne("Cliente")
+                        .HasForeignKey("Outshot.Models.Cliente", "UsuarioId");
+
+                    b.Navigation("Usuario");
+                });
+
             modelBuilder.Entity("Outshot.Models.DetallePedido", b =>
                 {
                     b.HasOne("Outshot.Models.Pedido", "Pedido")
@@ -386,12 +406,13 @@ namespace Outshot.Migrations
                 {
                     b.Navigation("DetallePedidos");
 
-                    b.Navigation("Inventario")
-                        .IsRequired();
+                    b.Navigation("Inventario");
                 });
 
             modelBuilder.Entity("Outshot.Models.Usuario", b =>
                 {
+                    b.Navigation("Cliente");
+
                     b.Navigation("MovimientosInventario");
 
                     b.Navigation("Pedidos");

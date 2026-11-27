@@ -1,4 +1,5 @@
-﻿namespace Outshot.Models
+﻿
+namespace Outshot.Models
 {
     public class Usuario
     {
@@ -13,6 +14,8 @@
         public string Rol { get; set; } = string.Empty;
 
         public bool Activo { get; set; }
+
+        public Cliente? Cliente { get; set; }
 
         public ICollection<Pedido> Pedidos { get; set; } = new List<Pedido>();
 

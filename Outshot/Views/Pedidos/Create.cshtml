@@ -28,59 +28,79 @@
                      class="text-danger">
                 </div>
 
-                <div class="form-group">
-                    <label asp-for="ClienteId" class="control-label">
-                        Cliente
-                    </label>
+                @if (User.IsInRole("Administrador"))
+                {
+                    <div class="form-group">
+                        <label asp-for="ClienteId" class="control-label">
+                            Cliente
+                        </label>
 
-                    <select asp-for="ClienteId"
-                            class="form-select"
-                            asp-items="ViewBag.ClienteId">
-                        <option value="">Seleccionar cliente</option>
-                    </select>
+                        <select asp-for="ClienteId"
+                                class="form-select"
+                                asp-items="ViewBag.ClienteId">
+                            <option value="">Seleccionar cliente</option>
+                        </select>
 
-                    <span asp-validation-for="ClienteId"
-                          class="text-danger">
-                    </span>
-                </div>
+                        <span asp-validation-for="ClienteId"
+                              class="text-danger">
+                        </span>
+                    </div>
 
-                <div class="form-group">
-                    <label asp-for="UsuarioId" class="control-label">
-                        Usuario responsable
-                    </label>
+                    <div class="form-group">
+                        <label asp-for="UsuarioId" class="control-label">
+                            Usuario responsable
+                        </label>
 
-                    <select asp-for="UsuarioId"
-                            class="form-select"
-                            asp-items="ViewBag.UsuarioId">
-                        <option value="">Seleccionar usuario</option>
-                    </select>
+                        <select asp-for="UsuarioId"
+                                class="form-select"
+                                asp-items="ViewBag.UsuarioId">
+                            <option value="">Seleccionar usuario</option>
+                        </select>
 
-                    <span asp-validation-for="UsuarioId"
-                          class="text-danger">
-                    </span>
-                </div>
+                        <span asp-validation-for="UsuarioId"
+                              class="text-danger">
+                        </span>
+                    </div>
 
-                <div class="form-group">
-                    <label asp-for="Estado" class="control-label">
-                        Estado del pedido
-                    </label>
+                    <div class="form-group">
+                        <label asp-for="Estado" class="control-label">
+                            Estado del pedido
+                        </label>
 
-                    <input asp-for="Estado"
-                           class="form-control"
-                           placeholder="Ej. Pendiente" />
+                        <input asp-for="Estado"
+                               class="form-control"
+                               placeholder="Ej. Pendiente" />
 
-                    <span asp-validation-for="Estado"
-                          class="text-danger">
-                    </span>
+                        <span asp-validation-for="Estado"
+                              class="text-danger">
+                        </span>
+                    </div>
+                }
+                else
+                {
+                    <input type="hidden" asp-for="ClienteId" />
+                    <input type="hidden" asp-for="UsuarioId" />
+                    <input type="hidden" asp-for="Estado" value="Pendiente" />
+
+                    <div class="alert alert-info">
+                        El pedido quedará asociado automáticamente a tu cuenta
+                        y tendrá el estado inicial Pendiente.
+                    </div>
+                }
+
+                <div class="alert alert-secondary mt-3">
+                    Después de registrar el pedido, podrás seleccionar
+                    los productos y las cantidades que deseas incluir.
                 </div>
 
                 <div class="form-group mt-3">
 
                     <button type="submit" class="outshot-btn">
-                        Guardar pedido
+                        Crear pedido
                     </button>
 
-                    <a asp-action="Index" class="btn btn-secondary">
+                    <a asp-action="Index"
+                       class="btn btn-secondary">
                         Volver al listado
                     </a>
 
@@ -89,9 +109,7 @@
             </form>
 
         </div>
-
     </section>
-
 </div>
 
 @section Scripts {

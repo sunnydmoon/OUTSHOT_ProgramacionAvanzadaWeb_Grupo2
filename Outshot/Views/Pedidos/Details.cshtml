@@ -2,6 +2,10 @@
 
 @{
     ViewData["Title"] = "Detalles del pedido";
+    bool esAdministrador = User.IsInRole("Administrador");
+    bool pedidoPendiente = Model.Estado == "Pendiente";
+    bool tieneProductos = Model.DetallePedidos != null &&
+                          Model.DetallePedidos.Any();
 }
 
 <div class="page-header">
@@ -12,7 +16,6 @@
 </div>
 
 <div class="module-layout">
-
     <section class="outshot-panel">
 
         <div class="panel-header">
@@ -22,16 +25,34 @@
 
         <div class="panel-body">
 
+            @if (TempData["MensajePedido"] != null)
+            {
+                <div class="alert alert-success">
+                    @TempData["MensajePedido"]
+                </div>
+            }
+
+            @if (TempData["ErrorPedido"] != null)
+            {
+                <div class="alert alert-danger">
+                    @TempData["ErrorPedido"]
+                </div>
+            }
+
             <dl class="row">
 
                 <dt class="col-sm-4">Número de pedido</dt>
                 <dd class="col-sm-8">@Model.PedidoId</dd>
 
                 <dt class="col-sm-4">Cliente</dt>
-                <dd class="col-sm-8">@Model.Cliente.Nombre</dd>
+                <dd class="col-sm-8">
+                    @(Model.Cliente?.Nombre ?? "No disponible")
+                </dd>
 
                 <dt class="col-sm-4">Usuario responsable</dt>
-                <dd class="col-sm-8">@Model.Usuario.Nombre</dd>
+                <dd class="col-sm-8">
+                    @(Model.Usuario?.Nombre ?? "No disponible")
+                </dd>
 
                 <dt class="col-sm-4">Fecha</dt>
                 <dd class="col-sm-8">
@@ -52,13 +73,16 @@
 
             <h3>Productos del pedido</h3>
 
-            <div class="mb-3">
-                <a asp-action="AgregarProducto"
-                   asp-route-id="@Model.PedidoId"
-                   class="outshot-btn">
-                    Agregar producto
-                </a>
-            </div>
+            @if (pedidoPendiente)
+            {
+                <div class="mb-3">
+                    <a asp-action="AgregarProducto"
+                       asp-route-id="@Model.PedidoId"
+                       class="outshot-btn">
+                        Agregar producto
+                    </a>
+                </div>
+            }
 
             <div class="table-responsive">
 
@@ -70,18 +94,25 @@
                             <th>Cantidad</th>
                             <th>Precio unitario</th>
                             <th>Subtotal</th>
-                            <th>Acciones</th>
+
+                            @if (esAdministrador)
+                            {
+                                <th>Acciones</th>
+                            }
                         </tr>
                     </thead>
 
                     <tbody>
 
-                        @if (Model.DetallePedidos.Any())
+                        @if (tieneProductos)
                         {
-                            @foreach (var detalle in Model.DetallePedidos)
+                            @foreach (var detalle in Model.DetallePedidos ?? Enumerable.Empty<Outshot.Models.DetallePedido>())
                             {
                                 <tr>
-                                    <td>@detalle.Producto.Nombre</td>
+
+                                    <td>
+                                        @(detalle.Producto?.Nombre ?? "No disponible")
+                                    </td>
 
                                     <td>@detalle.Cantidad</td>
 
@@ -93,35 +124,42 @@
                                         ₡@detalle.Subtotal.ToString("N2")
                                     </td>
 
-                                    <td>
-                                        <div class="table-actions">
+                                    @if (esAdministrador)
+                                    {
+                                        <td>
+                                            <div class="table-actions">
 
-                                            <a asp-action="EditarDetalle"
-                                               asp-route-id="@detalle.DetallePedidoId">
-                                                Editar
-                                            </a>
+                                                @if (pedidoPendiente)
+                                                {
+                                                    <a asp-action="EditarDetalle"
+                                                       asp-route-id="@detalle.DetallePedidoId">
+                                                        Editar
+                                                    </a>
 
-                                            <form asp-action="EliminarDetalle"
-                                                  asp-route-id="@detalle.DetallePedidoId"
-                                                  method="post"
-                                                  onsubmit="return confirm('¿Deseás eliminar este producto del pedido?');">
+                                                    <form asp-action="EliminarDetalle"
+                                                          asp-route-id="@detalle.DetallePedidoId"
+                                                          method="post"
+                                                          onsubmit="return confirm('¿Deseás eliminar este producto del pedido?');">
 
-                                                <button type="submit"
-                                                        class="btn btn-link text-danger p-0">
-                                                    Eliminar
-                                                </button>
+                                                        <button type="submit"
+                                                                class="btn btn-link text-danger p-0">
+                                                            Eliminar
+                                                        </button>
 
-                                            </form>
+                                                    </form>
+                                                }
 
-                                        </div>
-                                    </td>
+                                            </div>
+                                        </td>
+                                    }
+
                                 </tr>
                             }
                         }
                         else
                         {
                             <tr>
-                                <td colspan="5"
+                                <td colspan="@(esAdministrador ? 5 : 4)"
                                     class="text-center py-4">
                                     Este pedido todavía no tiene productos.
                                 </td>
@@ -136,11 +174,29 @@
 
             <div class="mt-3">
 
-                <a asp-action="Edit"
-                   asp-route-id="@Model.PedidoId"
-                   class="outshot-btn">
-                    Editar pedido
-                </a>
+                @if (pedidoPendiente && tieneProductos)
+                {
+                    <form asp-action="Confirmar"
+                          asp-route-id="@Model.PedidoId"
+                          method="post"
+                          class="d-inline"
+                          onsubmit="return confirm('¿Deseás confirmar este pedido? Después no podrás modificar sus productos.');">
+
+                        <button type="submit" class="outshot-btn">
+                            Confirmar pedido
+                        </button>
+
+                    </form>
+                }
+
+                @if (esAdministrador)
+                {
+                    <a asp-action="Edit"
+                       asp-route-id="@Model.PedidoId"
+                       class="outshot-btn">
+                        Editar pedido
+                    </a>
+                }
 
                 <a asp-action="Index"
                    class="btn btn-secondary">
@@ -150,7 +206,5 @@
             </div>
 
         </div>
-
     </section>
-
 </div>
