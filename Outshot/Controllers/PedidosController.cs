@@ -33,7 +33,12 @@ public class PedidosController : Controller
             if (usuarioId == null)
                 return Forbid();
 
-            pedidos = pedidos.Where(p => p.UsuarioId == usuarioId.Value);
+            int idUsuario = usuarioId.Value;
+
+            // Pedidos que hizo el cliente o que se registraron a su nombre.
+            pedidos = pedidos.Where(p =>
+                p.UsuarioId == idUsuario ||
+                p.Cliente.UsuarioId == idUsuario);
         }
 
         return View(await pedidos.ToListAsync());
@@ -78,10 +83,18 @@ public class PedidosController : Controller
     public async Task<IActionResult> Create(
         [Bind("ClienteId,UsuarioId,Estado")] Pedido pedido)
     {
-        // Para clientes, los identificadores se obtienen
-        // desde la cuenta autenticada y no desde el formulario.
-        if (!User.IsInRole("Administrador"))
+        if (User.IsInRole("Administrador"))
         {
+            // Las propiedades de navegación no vienen en el formulario,
+            // solo los Id. Se quitan para que no invaliden el modelo.
+            ModelState.Remove(nameof(Pedido.Cliente));
+            ModelState.Remove(nameof(Pedido.Usuario));
+            ModelState.Remove(nameof(Pedido.Estado));
+        }
+        else
+        {
+            // Para clientes, los datos se obtienen de la cuenta
+            // autenticada y no desde el formulario.
             int? usuarioId = ObtenerUsuarioId();
 
             if (usuarioId == null)
@@ -91,18 +104,21 @@ public class PedidosController : Controller
                 .FirstOrDefaultAsync(c => c.UsuarioId == usuarioId.Value);
 
             if (cliente == null)
-                return BadRequest(
-                    "No existe un registro de cliente asociado a esta cuenta.");
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "Tu cuenta no tiene un registro de cliente asociado.");
+
+                return View(pedido);
+            }
 
             pedido.UsuarioId = usuarioId.Value;
             pedido.ClienteId = cliente.ClienteId;
-            pedido.Estado = "Pendiente";
+
+            // Se descartan las validaciones del formulario porque
+            // ningún dato del cliente viene de ahí.
+            ModelState.Clear();
         }
-        // Las propiedades de navegación no vienen en el formulario,
-        // solo los Id. Se quitan para que no invaliden el modelo.
-        ModelState.Remove(nameof(Pedido.Cliente));
-        ModelState.Remove(nameof(Pedido.Usuario));
-        ModelState.Remove(nameof(Pedido.Estado));
 
         if (ModelState.IsValid)
         {
@@ -630,8 +646,16 @@ public class PedidosController : Controller
     {
         int? usuarioId = ObtenerUsuarioId();
 
-        return usuarioId.HasValue &&
-               pedido.UsuarioId == usuarioId.Value;
+        if (!usuarioId.HasValue)
+            return false;
+
+        if (pedido.UsuarioId == usuarioId.Value)
+            return true;
+
+        // También es propio si el pedido se registró a nombre de su cliente.
+        return _context.Clientes.Any(c =>
+            c.ClienteId == pedido.ClienteId &&
+            c.UsuarioId == usuarioId.Value);
     }
 
     // Cargar listas para los formularios administrativos.

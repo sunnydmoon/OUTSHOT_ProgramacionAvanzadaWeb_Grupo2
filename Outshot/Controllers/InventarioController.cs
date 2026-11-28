@@ -186,13 +186,18 @@ public class InventariosController : Controller
     }
 
     // POST: Inventarios/Edit/5
-    // Solo se edita el stock mínimo. Las existencias cambian mediante movimientos.
+    // Si cambian las existencias, la diferencia se registra como un movimiento de ajuste.
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, InventarioFormViewModel modelo)
     {
         if (id != modelo.InventarioId)
             return NotFound();
+
+        int? usuarioId = ObtenerUsuarioId();
+
+        if (usuarioId == null)
+            return Forbid();
 
         var inventario = await _context.Inventarios
             .Include(i => i.Producto)
@@ -202,15 +207,27 @@ public class InventariosController : Controller
             return NotFound();
 
         ModelState.Remove(nameof(modelo.ProductoId));
-        ModelState.Remove(nameof(modelo.Existencias));
 
         if (!ModelState.IsValid)
         {
             modelo.ProductoId = inventario.ProductoId;
             modelo.NombreProducto = inventario.Producto.Nombre;
-            modelo.Existencias = inventario.Existencias;
 
             return View(modelo);
+        }
+
+        int diferencia = modelo.Existencias - inventario.Existencias;
+
+        if (diferencia != 0)
+        {
+            RegistrarMovimiento(
+                inventario,
+                usuarioId.Value,
+                diferencia > 0 ? TipoEntrada : TipoSalida,
+                Math.Abs(diferencia),
+                $"Ajuste manual de existencias ({inventario.Existencias} → {modelo.Existencias})");
+
+            inventario.Existencias = modelo.Existencias;
         }
 
         inventario.StockMinimo = modelo.StockMinimo;
@@ -218,7 +235,7 @@ public class InventariosController : Controller
 
         await _context.SaveChangesAsync();
 
-        TempData["Mensaje"] = "Stock mínimo actualizado correctamente.";
+        TempData["Mensaje"] = "Inventario actualizado correctamente.";
 
         return RedirectToAction(nameof(Index));
     }
